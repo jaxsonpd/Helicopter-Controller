@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "C:\\ti\\TivaWare_C_Series-2.1.4.178",
+                "C:\\Users\\jdu80\\OneDrive - University of Canterbury\\Documents\\ENCE361\\1 Assignments",
+                "C:\\ti\\ccs1220\\ccs\\tools\\compiler\\ti-cgt-arm_20.2.7.LTS\\include"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "compilerPath": "C:\\MinGW\\bin\\gcc.exe",
+            "cStandard": "c11",
+            "cppStandard": "gnu++14",
+            "intelliSenseMode": "windows-gcc-x86",
+            "configurationProvider": "ms-vscode.makefile-tools"
+        }
+    ],
+    "version": 4
+}
