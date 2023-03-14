@@ -28,8 +28,8 @@
 #include "stdio.h"
 
 #include "circBufT.h"
+#include "Debug.h"
 // ========================= Constants and types =========================
-#define DEBUG
 #define ONEV_VALUE 2000 // 1V value in the adc
 #define TWOV_VALUE 3000 // 2V value in the adc
 
@@ -60,7 +60,7 @@ static void ADCCompletedInt_Handler(void) {
 }
 
 /**
- * @brief Initialize the adc module
+ * @brief initilise the ADC and the circular buffer
  * @cite ADCDemo.c from the lab 4 folder author: P.J. Bones UCECE
  * 
  * @param buffSize size of the circular buffer
@@ -110,7 +110,6 @@ void altitude_init(uint16_t buffSize) {
 
 /**
  * @brief get the average altitude of the helicopter from the circular buffer (0-100) ONE volt = 100 Two volts = 0
- * @cite ADCDemo.c from the lab 4 folder author: P.J. Bones UCECE
  * 
  * @return uint8_t average altitude (0-100)
  */

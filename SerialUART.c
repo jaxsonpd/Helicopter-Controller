@@ -20,6 +20,7 @@
 #include "driverlib/uart.h"
 #include "driverlib/pin_map.h"
 
+#include "Debug.h"
 // ========================= Constants and types =========================
 //---USB Serial comms: UART0, Rx:PA0 , Tx:PA1
 #define BAUD_RATE 9600
@@ -38,7 +39,6 @@
  * @brief Initialises the UART for sending and recieving data
  * @cite uartDemo.c from the lab 4 folder author: P.J. Bones UCECE
  * 
- * @return void
  */
 void SerialUART_init(uint32_t maxBufferSize) {
     // Enable the peripherals used by this example.
@@ -65,10 +65,8 @@ void SerialUART_init(uint32_t maxBufferSize) {
  * @cite uartDemo.c from the lab 4 folder author: P.J. Bones UCECE
  * 
  * @param charBuffer The string of data to be sent
- * @return void 
  */
-void SerialUART_SendInformation(char *charBuffer) {
-    // Send the string
+void SerialUART_SendInformation(char *charBuffer) {   
     while (*charBuffer) {
         // Write the next character to the UART Tx.
         UARTCharPut(UART_USB_BASE, *charBuffer);

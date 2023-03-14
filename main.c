@@ -7,7 +7,6 @@
  * This file contains the main function for the helicopter control project. 
  * It takes insperation from the lab 4 code produced by P.J. Bones	UCECE
 */
-
 // ========================= Include files =========================
 #include <stdint.h>
 #include <stdbool.h>
@@ -35,8 +34,7 @@
 
 #include "SerialUART.h"
 #include "altitude.h"
-// #include "inc/hw_memmap.h"
-// #include "driverlib/adc.h"
+#include "Debug.h"
 
 // ========================= Constants and types =========================
 #define SYSTICK_RATE_HZ 100
@@ -97,11 +95,11 @@ void Clock_init(void) {
 void slowTick_Handler(void) {
     slowTickFlag = false;
 
+    // Send current altitude over UART
     char string[100];
 
     usnprintf (string, sizeof(string), "Mean Alt: %3d, Raw ADC: %4d, Sample Number: %5d\r\n", altitude_get(), altitude_getRaw(), altitude_getSamples());
 
-    // Send the current time over UART
     SerialUART_SendInformation(string);
 }
 
