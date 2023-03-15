@@ -1,6 +1,0 @@
-{
-    "files.associations": {
-        "pin_map.h": "c",
-        "hw_memmap.h": "c"
-    }
-}
