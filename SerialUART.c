@@ -9,8 +9,6 @@
 #define PART_TM4C1230C3PM // Target device
 
 // ========================= Include files =========================
-#include "SerialUART.h"
-
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -20,7 +18,8 @@
 #include "driverlib/uart.h"
 #include "driverlib/pin_map.h"
 
-#include "Debug.h"
+#include "debug.h"
+#include "serialUART.h"
 // ========================= Constants and types =========================
 //---USB Serial comms: UART0, Rx:PA0 , Tx:PA1
 #define BAUD_RATE 9600

@@ -32,12 +32,12 @@
 #include "circBufT.h"
 #include "buttons4.h"
 
-#include "SerialUART.h"
+#include "serialUART.h"
 #include "altitude.h"
 #include "Debug.h"
 
 // ========================= Constants and types =========================
-#define SYSTICK_RATE_HZ 100
+#define SYSTICK_RATE_HZ 50
 #define SLOWTICK_RATE_HZ 8  // Max rate = SYSTICK_RATE_HZ
 #define CIRC_BUFFER_SIZE 8 // size of the circular buffer
 
