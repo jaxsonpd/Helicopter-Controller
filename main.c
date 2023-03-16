@@ -24,6 +24,8 @@
 #include "driverlib/interrupt.h"
 #include "driverlib/debug.h"
 #include "driverlib/pin_map.h"
+#include "OrbitOLED/OrbitOLEDInterface.h"
+
 
 
 #include "utils/ustdlib.h"
@@ -31,13 +33,14 @@
 
 #include "circBufT.h"
 #include "buttons4.h"
-
+#include "debug.h"
 #include "serialUART.h"
+
 #include "altitude.h"
-#include "Debug.h"
+#include "display.h"
 
 // ========================= Constants and types =========================
-#define SYSTICK_RATE_HZ 50
+#define SYSTICK_RATE_HZ 20
 #define SLOWTICK_RATE_HZ 8  // Max rate = SYSTICK_RATE_HZ
 #define CIRC_BUFFER_SIZE 8 // size of the circular buffer
 
@@ -62,9 +65,6 @@ void SysTickInterupt_Handler(void) {
         slowTickFlag = true;
     }
 
-    // Initiate the next ADC conversion
-    altitude_read();
-
     // Update the button state
     updateButtons();
 }
@@ -73,7 +73,7 @@ void SysTickInterupt_Handler(void) {
  * @brief Initialize the system clock (Taken from lab 4 code)
  * 
  */
-void Clock_init(void) {
+void clock_init(void) {
     // Set the clock to 20 MHz
     SysCtlClockSet ( SYSCTL_SYSDIV_10 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN | SYSCTL_XTAL_16MHZ );
 
@@ -96,11 +96,14 @@ void slowTick_Handler(void) {
     slowTickFlag = false;
 
     // Send current altitude over UART
-    char string[100];
+    char string[200];
 
     usnprintf (string, sizeof(string), "Mean Alt: %3d, Raw ADC: %4d, Sample Number: %5d\r\n", altitude_get(), altitude_getRaw(), altitude_getSamples());
 
-    SerialUART_SendInformation(string);
+    serialUART_SendInformation(string);
+
+    // Initiate the next ADC conversion
+    altitude_read();
 }
 
 /**
@@ -111,13 +114,16 @@ void slowTick_Handler(void) {
 
 int main(void) {
     // ========================= Initialise =========================
-    Clock_init();
-    SerialUART_init();
+    clock_init();
+    serialUART_init();
     altitude_init(CIRC_BUFFER_SIZE);
     initButtons ();
+    initDisplay ();
+    uint8_t displayState = 1;
 
     // Enable interrupts to the processor.
     IntMasterEnable();
+
 
     // ========================= Main Loop =========================
     while (1) {
@@ -129,6 +135,31 @@ int main(void) {
 
         if (checkButton(LEFT) == PUSHED) {
             altitude_reset();
+        }
+
+        if (checkButton(UP) == PUSHED) {
+            displayNothing();
+            if(displayState >= 3) {
+                displayState = 1;
+            } else {
+                displayState++;
+            }
+        }
+        switch(displayState) {
+        case 1:
+            // Call Display Percentage function
+            //displayNothing();
+            displayPercentage(altitude_getRaw());
+            break;
+        case 2:
+            // Call Display ADC function
+            //displayNothing();
+            displayADC(altitude_get());
+            break;
+        case 3:
+            // Call Display NOTHING function
+            displayNothing();
+            break;
         }
     }
 

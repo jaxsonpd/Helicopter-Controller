@@ -27,8 +27,8 @@
 #include "utils/ustdlib.h"
 #include "stdio.h"
 
+#include "debug.h"
 #include "circBufT.h"
-#include "Debug.h"
 // ========================= Constants and types =========================
 #define ONEV_VALUE 2000 // 1V value in the adc
 #define TWOV_VALUE 3000 // 2V value in the adc

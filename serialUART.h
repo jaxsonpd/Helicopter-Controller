@@ -18,7 +18,7 @@
  * @cite uartDemo.c from the lab 4 folder author: P.J. Bones UCECE
  * 
  */
-void SerialUART_init();
+void serialUART_init();
 
 /**
  * @brief Sends a string of data over UART
@@ -26,6 +26,6 @@ void SerialUART_init();
  * 
  * @param charBuffer The string of data to be sent
  */
-void SerialUART_SendInformation(char *charBuffer);
+void serialUART_SendInformation(char *charBuffer);
 
 #endif /* SERIALUART_H */
