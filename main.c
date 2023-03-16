@@ -135,6 +135,7 @@ int main(void) {
             altitude_reset();
         }
 
+        // Change between three displays
         if (checkButton(UP) == PUSHED) {
             displayNothing();
             if(displayState >= 3) {
@@ -145,15 +146,15 @@ int main(void) {
         }
         switch(displayState) {
         case 1:
-            // Call Display Percentage function
+            // Display Percentage
             displayPercentage(altitude_get());
             break;
         case 2:
-            // Call Display ADC function
+            // Display ADC
             displayADC(altitude_getRaw());
             break;
         case 3:
-            // Call Display NOTHING function
+            // Display NOTHING
             displayNothing();
             break;
         }
