@@ -6,6 +6,7 @@
  * 
  */
 
+
 // ========================= Include files =========================
 #include <stdint.h>
 #include <stdbool.h>
@@ -27,21 +28,24 @@
 #include "utils/ustdlib.h"
 #include "stdio.h"
 
-#include "debug.h"
 #include "circBufT.h"
+
+
 // ========================= Constants and types =========================
-#define ONEV_VALUE 2000 // 1V value in the adc
-#define TWOV_VALUE 3000 // 2V value in the adc
+#define DEBUG
+
 
 // ========================= Global Variables =========================
 static circBuf_t g_inBuffer;		// Buffer of size BUF_SIZE integers (sample values)
-static uint16_t g_ulSampCnt;		// Counter for the numbler of samples processed
+static uint16_t g_ulSampCnt = 0;		// Counter for the numbler of samples processed
 static uint8_t bufferSize;            // Size of the circular buffer
+static uint16_t oneVoltValue = 1500; // 1V value in the adc
+static uint16_t twoVoltValue = 3000; // 2V value in the adc
 
 
 // ========================= Function Definition =========================
 /**
- * @brief store the adc value when the adc conversion is complete
+ * @brief Store the adc value when the adc conversion is complete triggered by the adc done interupt
  * @cite ADCDemo.c from the lab 4 folder author: P.J. Bones UCECE
  * 
  */
@@ -59,6 +63,7 @@ static void ADCCompletedInt_Handler(void) {
 	ADCIntClear(ADC0_BASE, 3);    
 }
 
+
 /**
  * @brief initilise the ADC and the circular buffer
  * @cite ADCDemo.c from the lab 4 folder author: P.J. Bones UCECE
@@ -67,6 +72,7 @@ static void ADCCompletedInt_Handler(void) {
 */
 void altitude_init(uint16_t buffSize) {
     bufferSize = buffSize;
+    
     // The ADC0 peripheral must be enabled for configuration and use.
     SysCtlPeripheralEnable(SYSCTL_PERIPH_ADC0);
     
@@ -75,8 +81,6 @@ void altitude_init(uint16_t buffSize) {
     // conversion.
     ADCSequenceConfigure(ADC0_BASE, 3, ADC_TRIGGER_PROCESSOR, 0);
     
-    #ifdef DEBUG
-    //
     // Configure step 0 on sequence 3.  Sample channel 0 (ADC_CTL_CH0) in
     // single-ended mode (default) and configure the interrupt flag
     // (ADC_CTL_IE) to be set when the sample is done.  Tell the ADC logic
@@ -85,6 +89,8 @@ void altitude_init(uint16_t buffSize) {
     // sequence 0 has 8 programmable steps.  Since we are only doing a single
     // conversion using sequence 3 we will only configure step 0.  For more
     // on the ADC sequences and steps, refer to the LM3S1968 datasheet.
+    #ifdef DEBUG
+    
     ADCSequenceStepConfigure(ADC0_BASE, 3, 0, ADC_CTL_CH0 | ADC_CTL_IE |
                              ADC_CTL_END);    
     #else
@@ -92,15 +98,12 @@ void altitude_init(uint16_t buffSize) {
                              ADC_CTL_END);  
     #endif
                              
-    //
     // Since sample sequence 3 is now configured, it must be enabled.
     ADCSequenceEnable(ADC0_BASE, 3);
   
-    //
     // Register the interrupt handler
     ADCIntRegister (ADC0_BASE, 3, ADCCompletedInt_Handler);
   
-    //
     // Enable interrupts for ADC0 sequence 3 (clears any outstanding interrupts)
     ADCIntEnable(ADC0_BASE, 3);
 
@@ -108,13 +111,13 @@ void altitude_init(uint16_t buffSize) {
     initCircBuf (&g_inBuffer, bufferSize);
 }
 
+
 /**
- * @brief get the average altitude of the helicopter from the circular buffer (0-100) ONE volt = 100 Two volts = 0
+ * @brief get the average altitude of the helicopter from the circular buffer (0-100) ONE volt = 100% Two volts = 0%
  * 
  * @return uint8_t average altitude (0-100)
  */
 uint16_t altitude_get(void) {
-    // ONE volt = 100 Two volts = 0
     uint32_t sum = 0;
     uint8_t i;
 
@@ -125,14 +128,16 @@ uint16_t altitude_get(void) {
 
     sum = sum / bufferSize;
     
-    if (sum > TWOV_VALUE) {
+    // Convert to percentage
+    if (sum > twoVoltValue) {
         return 0;
-    } else if (sum < ONEV_VALUE) {
+    } else if (sum < oneVoltValue) {
         return 100;
     } else {
-        return (uint16_t) (100 - ((sum - ONEV_VALUE) * 100) / (TWOV_VALUE - ONEV_VALUE));
+        return (uint16_t) (100 - ((sum - oneVoltValue) * 100) / (twoVoltValue - oneVoltValue));
     }
 }
+
 
 /**
  * @brief get the average ADC value of the helicopter from the circular buffer
@@ -147,17 +152,20 @@ uint32_t altitude_getRaw(void) {
     for (i = 0; i < bufferSize; i++) {
         sum += readCircBuf(&g_inBuffer);
     }
+
     return sum / bufferSize;
 }
 
+
 /**
- * @brief get the number of samples that have been taken
+ * @brief Get the number of samples that have been taken
  * 
  * @return uint16_t number of samples
  */
 uint16_t altitude_getSamples(void) {
     return g_ulSampCnt;
 }
+
 
 /**
  * @brief Trigger the ADC to read the altitude of the helicopter
@@ -170,6 +178,7 @@ void altitude_read(void) {
     g_ulSampCnt++;
 }
 
+
 /**
  * @brief Reset the circular buffer to 0% altitude
  * 
@@ -178,6 +187,6 @@ void altitude_reset(void) {
     uint8_t i;
 
     for (i = 0; i < bufferSize; i++) {
-        writeCircBuf(&g_inBuffer, TWOV_VALUE);
+        writeCircBuf(&g_inBuffer, twoVoltValue);
     }
 }

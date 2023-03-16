@@ -6,11 +6,14 @@
  * 
 */
 
+
 #ifndef ALTITUDE_H
 #define ALTITUDE_H
 
+
 // ========================= Include files =========================
 #include <stdint.h>
+
 
 // ========================= Function Prototypes =========================
 /**
@@ -21,12 +24,14 @@
 */
 void altitude_init(uint16_t buffSize);
 
+
 /**
  * @brief get the average altitude of the helicopter from the circular buffer
  *
  * @return uint8_t average altitude (0-100)
  */
 uint16_t altitude_get(void);
+
 
 /**
  * @brief get the average ADC value of the helicopter from the circular buffer
@@ -35,6 +40,7 @@ uint16_t altitude_get(void);
 */
 uint32_t altitude_getRaw(void);
 
+
 /**
  * @brief get the number of samples that have been taken
  * 
@@ -42,11 +48,13 @@ uint32_t altitude_getRaw(void);
  */
 uint16_t altitude_getSamples(void);
 
+
 /**
  * @brief Trigger the ADC to read the altitude of the helicopter
  * 
 */
 void altitude_read(void);
+
 
 /**
  * @brief Reset the circular buffer to 0% altitude

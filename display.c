@@ -26,13 +26,18 @@
 
 #include "OrbitOLED/OrbitOLEDInterface.h"
 
-#include "debug.h"
-
 #include "utils/ustdlib.h"
 #include "stdio.h"
 
-// ========================= Function Definition =========================
 
+// ========================= Constants and types =========================
+#define DEBUG
+
+
+// ========================= Global Variables =========================
+
+
+// ========================= Function Definition =========================
 /**
  * @brief Enables GPIO pins for OLEF Peripheral
  * @cite OLEDTest.c from the lab 3 folder author: P.J. Bones UCECE

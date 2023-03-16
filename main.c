@@ -7,6 +7,8 @@
  * This file contains the main function for the helicopter control project. 
  * It takes inspiration from the lab 4 code produced by P.J. Bones	UCECE
 */
+
+
 // ========================= Include files =========================
 #include <stdint.h>
 #include <stdbool.h>
@@ -31,19 +33,22 @@
 
 #include "circBufT.h"
 #include "buttons4.h"
-#include "debug.h"
 #include "serialUART.h"
 
 #include "altitude.h"
 #include "display.h"
 
+
 // ========================= Constants and types =========================
 #define SYSTICK_RATE_HZ 20
-#define SLOWTICK_RATE_HZ 8  // Max rate = SYSTICK_RATE_HZ
-#define CIRC_BUFFER_SIZE 8 // size of the circular buffer
+#define SLOWTICK_RATE_HZ 8  // Max rate = SYSTICK_RATE_HZ (currently 8Hz as altitude update is 4Hz)
+#define CIRC_BUFFER_SIZE 8 // size of the circular buffer (1s of data)
+#define DEBUG
+
 
 // ========================= Global Variables =========================
 bool slowTickFlag = false;
+
 
 /**
  * @brief System tick interupt handler used to trigger the adc conversion
@@ -56,6 +61,7 @@ void SysTickInterupt_Handler(void) {
     // Increment the tick count
     tickInteruptCount++;
 
+    // Check if the slow tick period has elapsed
     if (tickInteruptCount >= slowTick_period) {
         // Reset the tick count
         tickInteruptCount = 0;
@@ -66,6 +72,7 @@ void SysTickInterupt_Handler(void) {
     // Update the button state
     updateButtons();
 }
+
 
 /**
  * @brief Initialize the system clock (Taken from lab 4 code)
@@ -86,6 +93,7 @@ void clock_init(void) {
     SysTickEnable();
 }
 
+
 /**
  * @brief Slow tick handler
  * 
@@ -95,21 +103,22 @@ void slowTick_Handler(void) {
     // Initiate the next ADC conversion
     altitude_read();
 
-
+    #ifdef DEBUG
     // Send current altitude over UART
     char string[200];
 
     usnprintf (string, sizeof(string), "Mean Alt: %3d, Raw ADC: %4d, Sample Number: %5d\r\n", altitude_get(), altitude_getRaw(), altitude_getSamples());
 
     serialUART_SendInformation(string);
+    #endif
 }
+
 
 /**
  * @brief Main function for the helicopter control project
  * 
  * @return int 
  */
-
 int main(void) {
     // ========================= Initialise =========================
     clock_init();
@@ -125,19 +134,19 @@ int main(void) {
 
     // ========================= Main Loop =========================
     while (1) {
-
         // Check if the slow tick flag is set
         if (slowTickFlag) {
             slowTick_Handler();
         }
 
+        // Reset the altitude circular buffer
         if (checkButton(LEFT) == PUSHED) {
             altitude_reset();
         }
 
         // Change between three displays
         if (checkButton(UP) == PUSHED) {
-            displayNothing();
+            displayNothing(); // Nessasaray to enusre the displays dont end up jumbled
             if(displayState >= 3) {
                 displayState = 1;
             } else {
@@ -160,6 +169,4 @@ int main(void) {
             break;
         }
     }
-
 }
-
