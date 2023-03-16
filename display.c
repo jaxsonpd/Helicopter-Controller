@@ -40,7 +40,7 @@ void displayPercentage (uint16_t percentage) {
 
     OLEDStringDraw ("Percentage      ", 0, 0);
 
-    usnprintf (string, sizeof(string), "%3d %            ", percentage);
+    usnprintf (string, sizeof(string), "%3d%%           ", percentage);
 
     OLEDStringDraw (string, 0, 1);
 }
@@ -61,10 +61,10 @@ void displayNothing (void) {
 
     OLEDStringDraw ("                ", 0, 0);
 
-    OLEDStringDraw ("                ", 1, 1);
+    OLEDStringDraw ("                ", 0, 1);
 
-    OLEDStringDraw ("                ", 2, 2);
+    OLEDStringDraw ("                ", 0, 2);
 
-    OLEDStringDraw ("                ", 3, 3);
+    OLEDStringDraw ("                ", 0, 3);
 }
 

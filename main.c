@@ -94,6 +94,9 @@ void clock_init(void) {
  */
 void slowTick_Handler(void) {
     slowTickFlag = false;
+    // Initiate the next ADC conversion
+    altitude_read();
+
 
     // Send current altitude over UART
     char string[200];
@@ -101,9 +104,6 @@ void slowTick_Handler(void) {
     usnprintf (string, sizeof(string), "Mean Alt: %3d, Raw ADC: %4d, Sample Number: %5d\r\n", altitude_get(), altitude_getRaw(), altitude_getSamples());
 
     serialUART_SendInformation(string);
-
-    // Initiate the next ADC conversion
-    altitude_read();
 }
 
 /**
@@ -149,12 +149,12 @@ int main(void) {
         case 1:
             // Call Display Percentage function
             //displayNothing();
-            displayPercentage(altitude_getRaw());
+            displayPercentage(altitude_get());
             break;
         case 2:
             // Call Display ADC function
             //displayNothing();
-            displayADC(altitude_get());
+            displayADC(altitude_getRaw());
             break;
         case 3:
             // Call Display NOTHING function
