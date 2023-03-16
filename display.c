@@ -1,10 +1,12 @@
-/*
- * display.c
+/**
+ * @file display.c
+ * @author Daniel Hawes (dha144@uclive.ac.nz)
+ * @brief Take values from altitude as parameters to display on the OLED Display
+ * @date 2023-03-16
  *
- *  Created on: 16/03/2023
- *      Author: Daniel Hawes
- *      Student Code: dha144
  */
+
+// ========================= Include files =========================
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -29,11 +31,25 @@
 #include "utils/ustdlib.h"
 #include "stdio.h"
 
+// ========================= Function Definition =========================
+
+/**
+ * @brief Enables GPIO pins for OLEF Peripheral
+ * @cite OLEDTest.c from the lab 3 folder author: P.J. Bones UCECE
+ *
+ */
 void initDisplay (void) {
     // Initalise the Orbit OLED display
     OLEDInitialise ();
 }
 
+
+/**
+ * @brief Draws to the OLED Display the percentage altitude
+ * @cite OLEDTest.c from the lab 3 folder author: P.J. Bones UCECE
+ *
+ * @param percentage The percentage altitude taken from altitude_get() in altitude.c
+*/
 void displayPercentage (uint16_t percentage) {
 
     char string[17];  // 16 characters across the display
@@ -45,6 +61,11 @@ void displayPercentage (uint16_t percentage) {
     OLEDStringDraw (string, 0, 1);
 }
 
+/**
+ * @brief Draws to the OLED Display the mean ADC value
+ *
+ * @param meanADC The mean ADC value taken from altitude_getRaw() in altitude.c
+*/
 void displayADC (uint32_t meanADC) {
 
     char string[17];
@@ -57,6 +78,11 @@ void displayADC (uint32_t meanADC) {
 
 }
 
+/**
+ * @brief Draws the OLED Display blank
+ *
+ *
+*/
 void displayNothing (void) {
 
     OLEDStringDraw ("                ", 0, 0);

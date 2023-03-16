@@ -5,7 +5,7 @@
  * @date 2023-03-12
  * 
  * This file contains the main function for the helicopter control project. 
- * It takes insperation from the lab 4 code produced by P.J. Bones	UCECE
+ * It takes inspiration from the lab 4 code produced by P.J. Bones	UCECE
 */
 // ========================= Include files =========================
 #include <stdint.h>
@@ -25,8 +25,6 @@
 #include "driverlib/debug.h"
 #include "driverlib/pin_map.h"
 #include "OrbitOLED/OrbitOLEDInterface.h"
-
-
 
 #include "utils/ustdlib.h"
 #include "stdio.h"
@@ -148,12 +146,10 @@ int main(void) {
         switch(displayState) {
         case 1:
             // Call Display Percentage function
-            //displayNothing();
             displayPercentage(altitude_get());
             break;
         case 2:
             // Call Display ADC function
-            //displayNothing();
             displayADC(altitude_getRaw());
             break;
         case 3:
