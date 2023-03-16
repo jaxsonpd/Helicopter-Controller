@@ -144,6 +144,7 @@ int main(void) {
                 displayState++;
             }
         }
+
         switch(displayState) {
         case 1:
             // Display Percentage
