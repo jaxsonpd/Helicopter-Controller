@@ -30,7 +30,7 @@ void altitude_init(uint16_t buffSize);
  *
  * @return uint8_t average altitude (0-100)
  */
-uint16_t altitude_get(void);
+uint32_t altitude_get(void);
 
 
 /**
@@ -46,7 +46,7 @@ uint32_t altitude_getRaw(void);
  * 
  * @return uint16_t number of samples
  */
-uint16_t altitude_getSamples(void);
+uint32_t altitude_getSamples(void);
 
 
 /**

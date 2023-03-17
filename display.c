@@ -55,7 +55,7 @@ void initDisplay (void) {
  *
  * @param percentage The percentage altitude taken from altitude_get() in altitude.c
 */
-void displayPercentage (uint16_t percentage) {
+void displayPercentage (uint32_t percentage) {
     char string[17];  // 16 characters across the display
 
     OLEDStringDraw ("Percentage      ", 0, 0);

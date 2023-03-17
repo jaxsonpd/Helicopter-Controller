@@ -40,9 +40,9 @@
 
 
 // ========================= Constants and types =========================
-#define SYSTICK_RATE_HZ 80
-#define SLOWTICK_RATE_HZ 8  // Max rate = SYSTICK_RATE_HZ (currently 8Hz as altitude update is 4Hz)
-#define CIRC_BUFFER_SIZE 8 // size of the circular buffer (1s of data)
+#define SYSTICK_RATE_HZ 40
+#define SLOWTICK_RATE_HZ 10  // Max rate = SYSTICK_RATE_HZ 
+#define CIRC_BUFFER_SIZE 4 // size of the circular buffer (100ms of data)
 #define DEBUG // Sends infromation over serial UART
 
 

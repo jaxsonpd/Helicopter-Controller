@@ -32,15 +32,15 @@
 
 
 // ========================= Constants and types =========================
-// #define DEBUG // Change analog input channel to 0 for debugging
+#define DEBUG // Change analog input channel to 0 for debugging
 
 
 // ========================= Global Variables =========================
 static circBuf_t g_inBuffer;		// Buffer of size BUF_SIZE integers (sample values)
-static uint16_t g_ulSampCnt = 0;		// Counter for the numbler of samples processed
+static uint32_t g_ulSampCnt = 0;		// Counter for the numbler of samples processed
 static uint8_t bufferSize;            // Size of the circular buffer
-static uint16_t maxAltitudeADC = 1080; // 1V value in the adc
-static uint16_t minAltitudeADC = 2250; // 2V value in the adc
+static uint32_t maxAltitudeADC = 1080; // 1V value in the adc
+static uint32_t minAltitudeADC = 2250; // 2V value in the adc
 static uint32_t ADCValue;
 
 
@@ -117,7 +117,7 @@ void altitude_init(uint16_t buffSize) {
  * 
  * @return uint8_t average altitude (0-100)
  */
-uint16_t altitude_get(void) {
+uint32_t altitude_get(void) {
     uint32_t sum = 0;
     uint8_t i;
 
@@ -126,16 +126,15 @@ uint16_t altitude_get(void) {
         sum += readCircBuf(&g_inBuffer);
     }
 
-    sum = sum / bufferSize;
+    sum = (2* sum + bufferSize) / 2 / bufferSize;
     
-    // Convert to percentage
-    if (sum > minAltitudeADC) {
-        return 0;
-    } else if (sum < maxAltitudeADC) {
+    if (sum < maxAltitudeADC) {
         return 100;
     } else {
-        return (uint16_t) (100 - ((sum - maxAltitudeADC) * 100) / (minAltitudeADC - maxAltitudeADC));
+        // Convert to percentage
+        return (uint32_t) (100 - ((sum - maxAltitudeADC) * 100) / (minAltitudeADC - maxAltitudeADC));
     }
+
 }
 
 
@@ -153,7 +152,7 @@ uint32_t altitude_getRaw(void) {
         sum += readCircBuf(&g_inBuffer);
     }
 
-    return sum / bufferSize;
+    sum = (2* sum + bufferSize) / 2 / bufferSize;
 }
 
 
@@ -162,7 +161,7 @@ uint32_t altitude_getRaw(void) {
  * 
  * @return uint16_t number of samples
  */
-uint16_t altitude_getSamples(void) {
+uint32_t altitude_getSamples(void) {
     return g_ulSampCnt;
 }
 
