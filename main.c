@@ -40,10 +40,10 @@
 
 
 // ========================= Constants and types =========================
-#define SYSTICK_RATE_HZ 20
+#define SYSTICK_RATE_HZ 80
 #define SLOWTICK_RATE_HZ 8  // Max rate = SYSTICK_RATE_HZ (currently 8Hz as altitude update is 4Hz)
 #define CIRC_BUFFER_SIZE 8 // size of the circular buffer (1s of data)
-#define DEBUG
+#define DEBUG // Sends infromation over serial UART
 
 
 // ========================= Global Variables =========================
@@ -68,6 +68,9 @@ void SysTickInterupt_Handler(void) {
 
         slowTickFlag = true;
     }
+
+    // Initiate the next ADC conversion
+    altitude_read();
 
     // Update the button state
     updateButtons();
@@ -100,8 +103,6 @@ void clock_init(void) {
  */
 void slowTick_Handler(void) {
     slowTickFlag = false;
-    // Initiate the next ADC conversion
-    altitude_read();
 
     #ifdef DEBUG
     // Send current altitude over UART
@@ -141,7 +142,7 @@ int main(void) {
 
         // Reset the altitude circular buffer
         if (checkButton(LEFT) == PUSHED) {
-            altitude_reset();
+            altitude_setMinimumAltitude();
         }
 
         // Change between three displays

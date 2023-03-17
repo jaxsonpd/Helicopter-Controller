@@ -57,9 +57,9 @@ void altitude_read(void);
 
 
 /**
- * @brief Reset the circular buffer to 0% altitude
+ * @brief Reset minimum altitude to the current ADC value
  * 
  */
-void altitude_reset(void);
+void altitude_setMinimumAltitude(void);
 
 #endif // ALTITUDE_H

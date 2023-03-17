@@ -32,15 +32,16 @@
 
 
 // ========================= Constants and types =========================
-#define DEBUG
+// #define DEBUG // Change analog input channel to 0 for debugging
 
 
 // ========================= Global Variables =========================
 static circBuf_t g_inBuffer;		// Buffer of size BUF_SIZE integers (sample values)
 static uint16_t g_ulSampCnt = 0;		// Counter for the numbler of samples processed
 static uint8_t bufferSize;            // Size of the circular buffer
-static uint16_t oneVoltValue = 1500; // 1V value in the adc
-static uint16_t twoVoltValue = 3000; // 2V value in the adc
+static uint16_t maxAltitudeADC = 1080; // 1V value in the adc
+static uint16_t minAltitudeADC = 2250; // 2V value in the adc
+static uint32_t ADCValue;
 
 
 // ========================= Function Definition =========================
@@ -50,7 +51,6 @@ static uint16_t twoVoltValue = 3000; // 2V value in the adc
  * 
  */
 static void ADCCompletedInt_Handler(void) {
-    uint32_t ADCValue;
 	//
 	// Get the single sample from ADC0.  ADC_BASE is defined in
 	// inc/hw_memmap.h
@@ -129,12 +129,12 @@ uint16_t altitude_get(void) {
     sum = sum / bufferSize;
     
     // Convert to percentage
-    if (sum > twoVoltValue) {
+    if (sum > minAltitudeADC) {
         return 0;
-    } else if (sum < oneVoltValue) {
+    } else if (sum < maxAltitudeADC) {
         return 100;
     } else {
-        return (uint16_t) (100 - ((sum - oneVoltValue) * 100) / (twoVoltValue - oneVoltValue));
+        return (uint16_t) (100 - ((sum - maxAltitudeADC) * 100) / (minAltitudeADC - maxAltitudeADC));
     }
 }
 
@@ -180,13 +180,9 @@ void altitude_read(void) {
 
 
 /**
- * @brief Reset the circular buffer to 0% altitude
+ * @brief Reset minimum altitude to the current ADC value
  * 
  */
-void altitude_reset(void) {
-    uint8_t i;
-
-    for (i = 0; i < bufferSize; i++) {
-        writeCircBuf(&g_inBuffer, twoVoltValue);
-    }
+void altitude_setMinimumAltitude(void) {
+    minAltitudeADC = ADCValue - 10; // Make sure it stays at 10
 }
