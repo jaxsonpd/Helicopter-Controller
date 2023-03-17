@@ -33,6 +33,10 @@
 
 // ========================= Constants and types =========================
 #define DEBUG // Change analog input channel to 0 for debugging
+#define DEBUG_ADC_CHANNEL ADC_CTL_CH0 // Use analog input channel 0 for debugging
+#define ALTITUDE_ADC_CHANNEL ADC_CTL_CH9 // USe analog input channel 9 for actual altitude
+
+#define ALTITUDE_GRADIENT 117 // 11.7 adc counts per 1% change in altitude
 
 
 // ========================= Global Variables =========================
@@ -92,10 +96,10 @@ void altitude_init(uint16_t buffSize) {
     // on the ADC sequences and steps, refer to the LM3S1968 datasheet.
     #ifdef DEBUG
     
-    ADCSequenceStepConfigure(ADC0_BASE, 3, 0, ADC_CTL_CH0 | ADC_CTL_IE |
+    ADCSequenceStepConfigure(ADC0_BASE, 3, 0, DEBUG_ADC_CHANNEL | ADC_CTL_IE |
                              ADC_CTL_END);    
     #else
-    ADCSequenceStepConfigure(ADC0_BASE, 3, 0, ADC_CTL_CH9 | ADC_CTL_IE |
+    ADCSequenceStepConfigure(ADC0_BASE, 3, 0, ALTITUDE_ADC_CHANNEL | ADC_CTL_IE |
                              ADC_CTL_END);  
     #endif
                              
@@ -131,7 +135,8 @@ int32_t altitude_get(void) {
     
 
     // Convert to percentage percentage = -0.0854*adc + 192 ( c value will change with min adc value)
-    return ((average * 10 / -117) + (minAltitudeADC * 10 / 117));
+    // multiply by 10 to get 1 decimal place precision back
+    return ((average * 10 / -ALTITUDE_GRADIENT) + (minAltitudeADC * 10 / ALTITUDE_GRADIENT));
 }
 
 
