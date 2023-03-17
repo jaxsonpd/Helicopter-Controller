@@ -36,12 +36,13 @@
 
 
 // ========================= Global Variables =========================
-static circBuf_t g_inBuffer;		// Buffer of size BUF_SIZE integers (sample values)
-static uint32_t g_ulSampCnt = 0;		// Counter for the numbler of samples processed
-static uint8_t bufferSize;            // Size of the circular buffer
-static uint32_t maxAltitudeADC = 1080; // 1V value in the adc
-static uint32_t minAltitudeADC = 2250; // 2V value in the adc
-static uint32_t ADCValue;
+static circBuf_t g_inBuffer;		        // Buffer of size BUF_SIZE integers (sample values)
+static uint8_t bufferSize;                  // Size of the circular buffer
+
+static uint32_t g_ulSampCnt = 0;		    // Counter for the numbler of samples processed
+
+static uint32_t minAltitudeADC = 2250;      // 2V value in the adc used to have a movable c value;
+static uint32_t ADCValue;                   // Raw adc value used to reset minAltitudeADC
 
 
 // ========================= Function Definition =========================
@@ -117,7 +118,7 @@ void altitude_init(uint16_t buffSize) {
  * 
  * @return uint8_t average altitude (0-100)
  */
-uint32_t altitude_get(void) {
+int32_t altitude_get(void) {
     uint32_t sum = 0;
     uint8_t i;
 
@@ -126,15 +127,11 @@ uint32_t altitude_get(void) {
         sum += readCircBuf(&g_inBuffer);
     }
 
-    sum = (2* sum + bufferSize) / 2 / bufferSize;
+    int32_t average = (2* sum + bufferSize) / 2 / bufferSize;
     
-    if (sum < maxAltitudeADC) {
-        return 100;
-    } else {
-        // Convert to percentage
-        return (uint32_t) (100 - ((sum - maxAltitudeADC) * 100) / (minAltitudeADC - maxAltitudeADC));
-    }
 
+    // Convert to percentage percentage = -0.0854*adc + 192 ( c value will change with min adc value)
+    return ((average * 10 / -117) + (minAltitudeADC * 10 / 117));
 }
 
 
@@ -152,7 +149,7 @@ uint32_t altitude_getRaw(void) {
         sum += readCircBuf(&g_inBuffer);
     }
 
-    sum = (2* sum + bufferSize) / 2 / bufferSize;
+    return (2* sum + bufferSize) / 2 / bufferSize;
 }
 
 
@@ -179,9 +176,9 @@ void altitude_read(void) {
 
 
 /**
- * @brief Reset minimum altitude to the current ADC value
+ * @brief Set minimum altitude to the current ADC value
  * 
  */
 void altitude_setMinimumAltitude(void) {
-    minAltitudeADC = ADCValue - 10; // Make sure it stays at 10
+    minAltitudeADC = ADCValue;
 }

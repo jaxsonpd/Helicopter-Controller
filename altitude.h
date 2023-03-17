@@ -30,7 +30,7 @@ void altitude_init(uint16_t buffSize);
  *
  * @return uint8_t average altitude (0-100)
  */
-uint32_t altitude_get(void);
+int32_t altitude_get(void);
 
 
 /**
@@ -57,7 +57,7 @@ void altitude_read(void);
 
 
 /**
- * @brief Reset minimum altitude to the current ADC value
+ * @brief Set minimum altitude to the current ADC value
  * 
  */
 void altitude_setMinimumAltitude(void);
