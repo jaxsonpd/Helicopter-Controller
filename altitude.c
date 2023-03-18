@@ -63,7 +63,8 @@ static void ADCCompletedInt_Handler(void) {
 	//
 	// Place it in the circular buffer (advancing write index)
 	writeCircBuf (&g_inBuffer, ADCValue);
-	//
+
+    //
 	// Clean up, clearing the interrupt
 	ADCIntClear(ADC0_BASE, 3);    
 }
@@ -175,7 +176,6 @@ uint32_t altitude_getSamples(void) {
 void altitude_read(void) {
     // Trigger the ADC conversion.
     ADCProcessorTrigger(ADC0_BASE, 3);
-
     g_ulSampCnt++;
 }
 

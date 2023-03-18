@@ -40,10 +40,12 @@
 
 
 // ========================= Constants and types =========================
-#define SYSTICK_RATE_HZ 40
-#define SLOWTICK_RATE_HZ 10  // Max rate = SYSTICK_RATE_HZ 
-#define CIRC_BUFFER_SIZE 4 // size of the circular buffer (100ms of data)
-#define DEBUG // Sends infromation over serial UART
+#define SYSTICK_RATE_HZ 64 // 2 * CIRC_BUFFER_SIZE * Altitued Rate (4 Hz)
+#define SLOWTICK_RATE_HZ 8  // Max rate = SYSTICK_RATE_HZ 
+
+#define CIRC_BUFFER_SIZE 8 // size of the circular buffer NEED EQUATION FOR THIS
+
+#define DEBUG // Sends information over serial UART
 
 
 // ========================= Global Variables =========================
@@ -70,10 +72,10 @@ void SysTickInterupt_Handler(void) {
     }
 
     // Initiate the next ADC conversion
-    altitude_read();
+    altitude_read(); // technically this should not be called in interupt handler but it is done in labs 3 and 4
 
     // Update the button state
-    updateButtons();
+    updateButtons(); // technically this should not be called in interupt handler but it is done in labs 3 and 4
 }
 
 
@@ -98,20 +100,16 @@ void clock_init(void) {
 
 
 /**
- * @brief Slow tick handler
+ * @brief Send altitued information over serial UART
  * 
  */
-void slowTick_Handler(void) {
-    slowTickFlag = false;
-
-    #ifdef DEBUG
+void sendSerial(void) {
     // Send current altitude over UART
     char string[200];
 
     usnprintf (string, sizeof(string), "Mean Alt: %3d, Raw ADC: %4d, Sample Number: %5d\r\n", altitude_get(), altitude_getRaw(), altitude_getSamples());
 
     serialUART_SendInformation(string);
-    #endif
 }
 
 
@@ -137,7 +135,10 @@ int main(void) {
     while (1) {
         // Check if the slow tick flag is set
         if (slowTickFlag) {
-            slowTick_Handler();
+            #ifdef DEBUG
+            sendSerial();
+            #endif
+            slowTickFlag = false;
         }
 
         // Reset the altitude circular buffer
