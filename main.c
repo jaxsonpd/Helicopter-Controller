@@ -125,6 +125,9 @@ int main(void) {
     altitude_init(CIRC_BUFFER_SIZE);
     initButtons ();
     initDisplay ();
+
+    altitude_setMinimumAltitude(); // Set the minimum altitude to the current altitude
+
     uint8_t displayState = 1;
 
     // Enable interrupts to the processor.
@@ -138,10 +141,11 @@ int main(void) {
             #ifdef DEBUG
             sendSerial();
             #endif
+
             slowTickFlag = false;
         }
 
-        // Reset the altitude circular buffer
+        // Reset the minimum altitude 
         if (checkButton(LEFT) == PUSHED) {
             altitude_setMinimumAltitude();
         }
