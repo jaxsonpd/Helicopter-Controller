@@ -32,11 +32,11 @@
 
 
 // ========================= Constants and types =========================
-#define DEBUG // Change analog input channel to 0 for debugging
+// #define DEBUG // Change analog input channel to 0 for debugging
 #define DEBUG_ADC_CHANNEL ADC_CTL_CH0 // Use analog input channel 0 for debugging
 #define ALTITUDE_ADC_CHANNEL ADC_CTL_CH9 // USe analog input channel 9 for actual altitude
 
-#define ALTITUDE_GRADIENT 124 // 12.4 adc counts per 1% change in altitude
+#define ALTITUDE_GRADIENT 12.4 // 12.4 adc counts per 1% change in altitude
 
 
 // ========================= Global Variables =========================

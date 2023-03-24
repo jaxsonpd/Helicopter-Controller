@@ -43,9 +43,9 @@
 #define SYSTICK_RATE_HZ 64 // 2 * CIRC_BUFFER_SIZE * Altitued Rate (4 Hz)
 #define SLOWTICK_RATE_HZ 8  // Max rate = SYSTICK_RATE_HZ 
 
-#define CIRC_BUFFER_SIZE 8 // size of the circular buffer NEED EQUATION FOR THIS
+#define CIRC_BUFFER_SIZE 8 // size of the circular buffer used to store the altitued samples
 
-#define DEBUG // Sends information over serial UART
+// #define DEBUG // Sends information over serial UART
 
 
 // ========================= Global Variables =========================
