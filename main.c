@@ -37,6 +37,7 @@
 
 #include "altitude.h"
 #include "display.h"
+#include "yaw.h"
 
 
 // ========================= Constants and types =========================
@@ -107,7 +108,15 @@ void sendSerial(void) {
     // Send current altitude over UART
     char string[200];
 
-    usnprintf (string, sizeof(string), "Mean Alt: %3d, Raw ADC: %4d, Sample Number: %5d\r\n", altitude_get(), altitude_getRaw(), altitude_getSamples());
+    uint8_t yaw_raw = yaw_getRaw();
+    bool channelA = yaw_raw & 1; 
+    bool channelB = yaw_raw & (1 >> 1);
+    bool channelA_prev = yaw_raw & (1 >> 2);
+    bool channelB_prev = yaw_raw & (1 >> 3);
+
+    usnprintf (string, sizeof(string), 
+        "Mean Alt: %3d, Yaw: %3d, CHB: %d, CHA: %d, CHB prev: %d, CHA prev: %d", 
+        altitude_get(), yaw_get(), channelB, channelA, channelB_prev, channelA_prev);
 
     serialUART_SendInformation(string);
 }
@@ -138,11 +147,11 @@ int main(void) {
     while (1) {
         // Check if the slow tick flag is set
         if (slowTickFlag) {
+            slowTickFlag = false;
+
             #ifdef DEBUG
             sendSerial();
             #endif
-
-            slowTickFlag = false;
         }
 
         // Reset the minimum altitude 
@@ -150,29 +159,7 @@ int main(void) {
             altitude_setMinimumAltitude();
         }
 
-        // Change between three displays
-        if (checkButton(UP) == PUSHED) {
-            displayNothing(); // Nessasaray to enusre the displays dont end up jumbled
-            if(displayState >= 3) {
-                displayState = 1;
-            } else {
-                displayState++;
-            }
-        }
+        // Display Altitued and yaw
 
-        switch(displayState) {
-        case 1:
-            // Display Percentage
-            displayPercentage(altitude_get());
-            break;
-        case 2:
-            // Display ADC
-            displayADC(altitude_getRaw());
-            break;
-        case 3:
-            // Display NOTHING
-            displayNothing();
-            break;
-        }
     }
 }
