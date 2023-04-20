@@ -14,6 +14,12 @@
 
 // ========================= Function Prototypes =========================
 /**
+ * @brief Pin Change intrupt handler for the yaw encoder
+ *
+ */
+void encoderChangeInt_Handler(void);
+
+/**
  * @brief initilise the quadrature encoder
  * 
  */

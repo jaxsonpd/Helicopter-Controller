@@ -1,7 +1,7 @@
 /**
  * @file yaw.c
  * @author Jack Duignan (jdu80@uclive.ac.nz)
- * @brief caculate the current yaw of the helicopter from the quadrature endcoder
+ * @brief calculate the current yaw of the helicopter from the quadrature encoder
  * @date 2023-04-13
  * 
  */

@@ -108,7 +108,7 @@ void sendSerial(void) {
     // Send current altitude over UART
     char string[200];
 
-    uint8_t yaw_raw = yaw_getRaw();
+    uint8_t yaw_raw = yaw_getChannels();
     bool channelA = yaw_raw & 1; 
     bool channelB = yaw_raw & (1 >> 1);
     bool channelA_prev = yaw_raw & (1 >> 2);
@@ -159,7 +159,7 @@ int main(void) {
             altitude_setMinimumAltitude();
         }
 
-        // Display Altitued and yaw
-
+        // Display Altitude and yaw
+        displayYawAndAltitude(yaw_get(), altitude_get());
     }
 }
