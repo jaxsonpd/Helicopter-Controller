@@ -40,7 +40,7 @@
 #define YAW_ENC_CHB_PIN GPIO_PIN_1
 #define YAW_ENC_CHB_PORT GPIO_PORTB_BASE
 
-#define NUM_SLOTS_PER_REVOLUTION 196 // Number of slots in the quadrature encoder
+#define NUM_SLOTS_PER_REVOLUTION 112 // Number of slots in the quadrature encoder
 #define DEGREES_SCALE 10 // Scale factor for returning degrees so not to use floats
 
 
@@ -68,7 +68,7 @@ void encoderChangeInt_Handler(void) {
         // Channel B triggered the intrupt
         if (channelA == channelB_prev) encoderValue++; // B leads A so clockwise
         else encoderValue--; // A leads B so anti-clockwise
-    } else {
+    } else if(channelA != channelA_prev) {
         // Channel A triggered the intrupt
         if (channelB == channelA_prev) encoderValue--; // A leads B so anti-clockwise
         else encoderValue++; // B leads A so clockwise
@@ -90,18 +90,20 @@ void yaw_init(void) {
 
     // Yaw channel A
     GPIOPinTypeGPIOInput(YAW_ENC_CHA_PORT, YAW_ENC_CHA_PIN);
-    GPIOPadConfigSet(YAW_ENC_CHA_PORT, YAW_ENC_CHA_PIN, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
+    GPIOPadConfigSet(YAW_ENC_CHA_PORT, YAW_ENC_CHA_PIN, GPIO_STRENGTH_4MA, GPIO_PIN_TYPE_STD_WPU);
 
     // Yaw channel B
     GPIOPinTypeGPIOInput(YAW_ENC_CHB_PORT, YAW_ENC_CHB_PIN);
-    GPIOPadConfigSet(YAW_ENC_CHB_PORT, YAW_ENC_CHB_PIN, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
+    GPIOPadConfigSet(YAW_ENC_CHB_PORT, YAW_ENC_CHB_PIN, GPIO_STRENGTH_4MA, GPIO_PIN_TYPE_STD_WPU);
 
     // Register the pin change interupts for each channel
-    GPIOIntRegister(YAW_ENC_PERIPHERAL, encoderChangeInt_Handler);
+    GPIOIntRegister(YAW_ENC_CHA_PORT | YAW_ENC_CHB_PORT, encoderChangeInt_Handler);
     GPIOIntTypeSet(YAW_ENC_CHA_PORT | YAW_ENC_CHB_PORT, YAW_ENC_CHA_PIN | YAW_ENC_CHB_PIN, GPIO_BOTH_EDGES);
     
     // Enable the interrupts for the pins
     GPIOIntEnable(YAW_ENC_CHA_PORT | YAW_ENC_CHB_PORT, YAW_ENC_CHA_PIN | YAW_ENC_CHB_PIN);
+
+    
 
     // Set the prevous states of the channels
     channelA_prev = GPIOPinRead(YAW_ENC_CHA_PORT, YAW_ENC_CHA_PIN);
@@ -119,9 +121,17 @@ void yaw_init(void) {
  */
 int32_t yaw_get(void) {
     // Convert from encoder value to degrees
-    return (encoderValue * 360 * DEGREES_SCALE) / NUM_SLOTS_PER_REVOLUTION;
+    return (encoderValue * 360 * DEGREES_SCALE) / (NUM_SLOTS_PER_REVOLUTION * 4);
 }
 
+/**
+ * @brief Return the encoder value
+ * 
+ * @return int32_t encoder value
+*/
+int32_t yaw_getEncoderValue(void) {
+    return encoderValue;
+}
 
 /**
  * @brief get the current values of the quadrature encoder channels
@@ -129,8 +139,5 @@ int32_t yaw_get(void) {
  * @return uint8_t current values of the quadrature encoder channels (0000 BPrev APREV B A)
  */
 uint8_t yaw_getChannels(void) {
-    return (GPIOPinRead(YAW_ENC_CHA_PORT, YAW_ENC_CHA_PIN) >> 0) |
-       (GPIOPinRead(YAW_ENC_CHB_PORT, YAW_ENC_CHB_PIN) >> 1) |
-       (channelA_prev << 2) |
-       (channelB_prev << 3);
+    return ((GPIOPinRead(YAW_ENC_CHA_PORT, YAW_ENC_CHA_PIN)) | (GPIOPinRead(YAW_ENC_CHB_PORT, YAW_ENC_CHB_PIN) << 1) | (channelA_prev << 2) | (channelB_prev << 3));
 }

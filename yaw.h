@@ -33,6 +33,13 @@ void yaw_init(void);
 int32_t yaw_get(void);
 
 /**
+ * @brief Return the encoder value
+ * 
+ * @return int32_t encoder value
+*/
+int32_t yaw_getEncoderValue(void);
+
+/**
  * @brief get the current values of the quadrature encoder channels
  * 
  * @return uint8_t current values of the quadrature encoder channels (0000 BPrev APREV B A)

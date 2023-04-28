@@ -55,12 +55,16 @@ void initDisplay (void) {
  * @param yaw The yaw taken from yaw_get() in yaw.c
  * @param altitude The altitude taken from altitude_get() in altitude.c
 */
-void displayYawAndAltitude (uint32_t yaw, uint32_t altitude) {
+void displayYawAndAltitude (int32_t yaw, int32_t altitude) {
     char string[17];
     char string2[17];
 
+    int32_t degrees = yaw / 10;
+    // Find the decimal value an convert it to absolute value
+    int32_t decimalDegrees = (yaw < 0) ? yaw % 10 * -1 : yaw % 10;
+
     OLEDStringDraw ("YAW:            ", 0, 0);
-    usnprintf (string, sizeof(string), "%3d%%°          ", yaw);
+    usnprintf (string, sizeof(string), "%4d.%1d         ", degrees, decimalDegrees);
     OLEDStringDraw (string, 0, 1);
     OLEDStringDraw ("Altitude:       ", 0, 2);
     usnprintf (string2, sizeof(string2), "%3d%%           ", altitude);
@@ -77,7 +81,7 @@ void displayYaw (uint32_t yaw) {
     char string[17];
 
     OLEDStringDraw ("YAW:            ", 0, 0);
-    usnprintf (string, sizeof(string), "%3d%%°          ", yaw);
+    usnprintf (string, sizeof(string), "%3d%%ï¿½          ", yaw);
     OLEDStringDraw (string, 0, 1);
 }
 

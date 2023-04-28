@@ -46,8 +46,11 @@
 
 #define CIRC_BUFFER_SIZE 8 // size of the circular buffer used to store the altitued samples
 
-// #define DEBUG // Sends information over serial UART
+#define DEBUG // Sends information over serial UART
 
+// Channel A input pin for yaw (J1-03)
+#define YAW_ENC_CHA_PIN GPIO_PIN_0 
+#define YAW_ENC_CHA_PORT GPIO_PORTB_BASE
 
 // ========================= Global Variables =========================
 bool slowTickFlag = false;
@@ -110,13 +113,19 @@ void sendSerial(void) {
 
     uint8_t yaw_raw = yaw_getChannels();
     bool channelA = yaw_raw & 1; 
-    bool channelB = yaw_raw & (1 >> 1);
-    bool channelA_prev = yaw_raw & (1 >> 2);
-    bool channelB_prev = yaw_raw & (1 >> 3);
+    bool channelB = yaw_raw & (1 << 1);
+    bool channelA_prev = yaw_raw & (1 << 2);
+    bool channelB_prev = yaw_raw & (1 << 3);
+
+    int32_t yaw = yaw_get();
+    int32_t degrees = yaw / 10;
+    // Find the decimal value an convert it to absolute value
+    int32_t decimalDegrees = (yaw < 0) ? yaw % 10 * -1 : yaw % 10;
 
     usnprintf (string, sizeof(string), 
-        "Mean Alt: %3d, Yaw: %3d, CHB: %d, CHA: %d, CHB prev: %d, CHA prev: %d", 
-        altitude_get(), yaw_get(), channelB, channelA, channelB_prev, channelA_prev);
+       "Alt: %3d, Yaw: %4d.%1d, Encoder: %4d, %1d%1d, prev: %1d%1d \n\r", 
+       altitude_get(), degrees, decimalDegrees, yaw_getEncoderValue(), channelA, channelB, channelA_prev, channelB_prev);
+    // usnprintf (string, sizeof(string), "Alt: %3d, Yaw: %3d, Pin: %1d \n\r", altitude_get(), yaw_get(), GPIOPinRead(YAW_ENC_CHA_PORT, YAW_ENC_CHA_PIN));
 
     serialUART_SendInformation(string);
 }
@@ -134,10 +143,9 @@ int main(void) {
     altitude_init(CIRC_BUFFER_SIZE);
     initButtons ();
     initDisplay ();
+    yaw_init ();
 
     altitude_setMinimumAltitude(); // Set the minimum altitude to the current altitude
-
-    uint8_t displayState = 1;
 
     // Enable interrupts to the processor.
     IntMasterEnable();
