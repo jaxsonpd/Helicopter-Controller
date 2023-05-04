@@ -121,7 +121,13 @@ void yaw_init(void) {
  */
 int32_t yaw_get(void) {
     // Convert from encoder value to degrees
-    return (encoderValue * 360 * DEGREES_SCALE) / (NUM_SLOTS_PER_REVOLUTION * 4);
+    int32_t relativePos = (encoderValue * 360 * DEGREES_SCALE) / (NUM_SLOTS_PER_REVOLUTION * 4);
+    if (relativePos <= - 1800) {
+        relativePos += 3600;
+    } else if (relativePos > 1800) {
+        relativePos -= 3600;
+    }
+    return relativePos;
 }
 
 /**
