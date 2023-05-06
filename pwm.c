@@ -28,6 +28,9 @@
 #define PWM_RATE_MAIN_HZ 150
 #define PWM_RATE_TAIL_HZ 150
 
+#define PWM_DIVIDER_CODE SYSCTL_PWMDIV_4
+#define PWM_DIVIDER 4
+
 //  PWM Hardware Details M0PWM7 (gen 3)
 //  ---Main Rotor PWM: PC5, J4-05
 #define PWM_MAIN_BASE	     PWM0_BASE
@@ -55,13 +58,58 @@
 // ===================================== Globals ======================================
 uint8_t mainRotorDuty = 0;
 uint8_t tailRotorDuty = 0;
+bool masterEnable = false; // Master enable for the PWM moduals
 
 // ===================================== Function Definitions =========================
+/**
+ * @brief set the PWM parameters
+ * @param uint8_t duty the duty cycle of the PWM
+ * @param uint8_t pin the pin to set the PWM on
+ *
+ */
+static void setPWM (uint8_t duty, uint8_t pin) {
+    if (pin == PWM_MAIN_GPIO_PIN) {
+        if (duty == 0) {
+            // Disable the output
+            PWMOutputState(PWM_MAIN_BASE, PWM_MAIN_OUTBIT, false);
+        } else if (duty <= 100) {
+            // Calculate the PWM period corresponding to the freq.
+            uint32_t ui32Period =
+                SysCtlClockGet() / PWM_DIVIDER / PWM_RATE_MAIN_HZ;
+
+            PWMGenPeriodSet(PWM_MAIN_BASE, PWM_MAIN_GEN, ui32Period);
+            PWMPulseWidthSet(PWM_MAIN_BASE, PWM_MAIN_OUTNUM,
+                ui32Period * duty / 100);
+        }
+    }
+
+    if (pin == PWM_TAIL_GPIO_PIN) {
+        if (duty == 0) {
+            // Disable the output
+            PWMOutputState(PWM_TAIL_BASE, PWM_TAIL_OUTBIT, false);
+        } else if (duty <= 100) {
+            // Enable the output
+            PWMOutputState(PWM_TAIL_BASE, PWM_TAIL_OUTBIT, true);
+
+            // Calculate the PWM period corresponding to the freq.
+            uint32_t ui32Period =
+                SysCtlClockGet() / PWM_DIVIDER / PWM_RATE_TAIL_HZ;
+            
+            PWMGenPeriodSet(PWM_TAIL_BASE, PWM_TAIL_GEN, ui32Period);
+            PWMPulseWidthSet(PWM_TAIL_BASE, PWM_TAIL_OUTNUM,
+                ui32Period * duty / 100);
+        }
+    }
+}
+
 /** 
  * @brief setup the pwm moduals for the main and tail rotors
  * 
  */
 void PWM_init(void) {
+    // Set the PWM clock rate (using the prescaler)
+    SysCtlPWMClockSet(PWM_DIVIDER_CODE);
+
     // Main rotor PWM setup
     SysCtlPeripheralEnable(PWM_MAIN_PERIPH_PWM);
     SysCtlPeripheralEnable(PWM_MAIN_PERIPH_GPIO);
@@ -73,7 +121,7 @@ void PWM_init(void) {
                     PWM_GEN_MODE_UP_DOWN | PWM_GEN_MODE_NO_SYNC);
 
     // Set the initial PWM parameters
-    setPWM(PWM_RATE_MAIN_HZ, 0, PWM_MAIN_GPIO_PIN);
+    setPWM(0, PWM_MAIN_GPIO_PIN);
 
     // Enable the PWM generator
     PWMGenEnable(PWM_MAIN_BASE, PWM_MAIN_GEN);
@@ -92,7 +140,7 @@ void PWM_init(void) {
                     PWM_GEN_MODE_UP_DOWN | PWM_GEN_MODE_NO_SYNC);
 
     // Set the initial PWM parameters
-    setPWM(PWM_RATE_TAIL_HZ, 0, PWM_TAIL_GPIO_PIN);
+    setPWM(0, PWM_TAIL_GPIO_PIN);
 
     // Enable the PWM generator
     PWMGenEnable(PWM_TAIL_BASE, PWM_TAIL_GEN);
@@ -100,6 +148,7 @@ void PWM_init(void) {
     // Disable the output
     PWMOutputState(PWM_TAIL_BASE, PWM_TAIL_OUTBIT, false);
 }
+
 
 /** 
  * @brief set the duty cycle of the main rotor
@@ -109,13 +158,13 @@ void PWM_init(void) {
  */
 uint8_t PWM_setMainRotorDuty(uint8_t duty_cycle) {
     // Check range
-    if (duty_cycle > 100 || duty_cycle < 0) {
+    if (duty_cycle > 100) {
         return 0; // Out of range
     }
 
     // Set the duty cycle
     mainRotorDuty = duty_cycle;
-    setPWM(PWM_RATE_MAIN_HZ, duty_cycle, PWM_MAIN_GPIO_PIN);
+    setPWM(duty_cycle, PWM_MAIN_GPIO_PIN);
     return 1;
 }
 
@@ -127,13 +176,13 @@ uint8_t PWM_setMainRotorDuty(uint8_t duty_cycle) {
  */
 uint8_t PWM_setTailRotorDuty(uint8_t duty_cycle) {
     // Check range
-    if (duty_cycle > 100 || duty_cycle < 0) {
+    if (duty_cycle > 100) {
         return 0; // Out of range
     }
 
     // Set the duty cycle
     tailRotorDuty = duty_cycle;
-    setPWM(PWM_RATE_TAIL_HZ, duty_cycle, PWM_TAIL_GPIO_PIN);
+    setPWM(duty_cycle, PWM_TAIL_GPIO_PIN);
     return 1;
 }
 
@@ -160,6 +209,8 @@ uint8_t PWM_getTailRotorDuty(void) {
  * 
  */
 void PWM_enable(void) {
+    masterEnable = true;
+    
     PWMOutputState(PWM_MAIN_BASE, PWM_MAIN_OUTBIT, true);
     PWMOutputState(PWM_TAIL_BASE, PWM_TAIL_OUTBIT, true);
 }
@@ -169,6 +220,8 @@ void PWM_enable(void) {
  * 
  */
 void PWM_disable(void) {
+    masterEnable = false;
+
     PWMOutputState(PWM_MAIN_BASE, PWM_MAIN_OUTBIT, false);
     PWMOutputState(PWM_TAIL_BASE, PWM_TAIL_OUTBIT, false);
 }
