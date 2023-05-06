@@ -46,7 +46,7 @@
 
 #define CIRC_BUFFER_SIZE 8 // size of the circular buffer used to store the altitued samples
 
-#define DEBUG // Sends information over serial UART
+// #define DEBUG // Sends information over serial UART
 
 // Channel A input pin for yaw (J1-03)
 #define YAW_ENC_CHA_PIN GPIO_PIN_0 

@@ -65,13 +65,22 @@ void encoderChangeInt_Handler(void) {
     
     // Calculate the new encoder value
     if (channelB != channelB_prev) {
-        // Channel B triggered the intrupt
+        // Channel B triggered the interrupt
         if (channelA == channelB_prev) encoderValue++; // B leads A so clockwise
         else encoderValue--; // A leads B so anti-clockwise
     } else if(channelA != channelA_prev) {
-        // Channel A triggered the intrupt
+        // Channel A triggered the interrupt
         if (channelB == channelA_prev) encoderValue--; // A leads B so anti-clockwise
         else encoderValue++; // B leads A so clockwise
+    }
+
+    // Bound to -179 to 180
+    if (encoderValue > 224) {
+        // To high
+        encoderValue -= 448;
+    } else if (encoderValue <= -224) {
+        // To low
+        encoderValue += 448;
     }
 
     // Set the previous states of the channels
@@ -121,13 +130,13 @@ void yaw_init(void) {
  */
 int32_t yaw_get(void) {
     // Convert from encoder value to degrees
-    int32_t relativePos = (encoderValue * 360 * DEGREES_SCALE) / (NUM_SLOTS_PER_REVOLUTION * 4);
-    if (relativePos <= - 1800) {
-        relativePos += 3600;
-    } else if (relativePos > 1800) {
-        relativePos -= 3600;
-    }
-    return relativePos;
+    // int32_t relativePos = (encoderValue * 360 * DEGREES_SCALE) / (NUM_SLOTS_PER_REVOLUTION * 4);
+    //    if (relativePos <= - 1800) {
+    //        relativePos += 3600;
+    //    } else if (relativePos > 1800) {
+    //        relativePos -= 3600;
+    //    }
+    return (encoderValue * 360 * DEGREES_SCALE) / (NUM_SLOTS_PER_REVOLUTION * 4);
 }
 
 /**
