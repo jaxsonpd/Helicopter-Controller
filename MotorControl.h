@@ -14,7 +14,7 @@
 #include <stdint.h>
 
 // ===================================== Constants ====================================
-
+enum MOTORCONTORL_MOTOR {MAIN_MOTOR, TAIL_MOTOR};
 
 // ===================================== Globals ======================================
 
@@ -24,39 +24,61 @@
  * @brief initilise the motor control module
  * 
  */
-void MotorControl_init(void);
+void motorControl_init(void);
+
 
 /**
  * @brief update the controller error etc
  * @param deltaT the time since the last update
  * 
  */
-void MotorControl_update(uint32_t deltaT);
+void motorControl_update(uint32_t deltaT);
+
 
 /**
  * @brief Change the altitude setpoint
  * 
  * @param setpoint the new altitude setpoint
  */
-void MotorControl_setAltitudeSetpoint(uint32_t setpoint);
+void motorControl_setAltitudeSetpoint(uint32_t setpoint);
+
 
 /**
  * @brief Change the yaw setpoint
- * z
  * @param setpoint the new yaw setpoint
- */
-void MotorControl_setYawSetpoint(uint32_t setpoint);
-
-/**
- * @brief Enable the control modual
  * 
  */
-void MotorControl_enable(void);
+void motorControl_setYawSetpoint(uint32_t setpoint);
+
 
 /**
- * @brief Disable the control modual
- * 
+ * @brief Disable the motors
+ * @param motor the motor to disable
  */
-void MotorControl_disable(void);
+void motorControl_disable(uint8_t motor);
+
+
+/**
+ * @brief Enable the motors
+ * @param motor the motor to Enable
+ */
+void motorControl_enable(uint8_t motor);
+
+
+/** 
+ * @brief Return the current duty cycle of the main rotor
+ * 
+ * @return uint8_t duty cycle of the main rotor
+ */
+uint8_t motorControl_getMainRotorDuty(void);
+
+
+/** 
+ * @brief Return the current duty cycle of the tail rotor
+ * 
+ * @return uint8_t duty cycle of the tail rotor
+ */
+uint8_t motorControl_getTailRotorDuty(void);
+
 
 #endif // MOTORCONTROL_H 

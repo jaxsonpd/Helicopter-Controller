@@ -8,7 +8,7 @@
 
 // ===================================== Includes =====================================
 #include <stdint.h>
-
+#include <stdbool.h>
 
 #include "MotorControl.h"
 #include "pwm.h"
@@ -18,40 +18,103 @@
 // ===================================== Constants ====================================
 // Define controller gains
 #define MAIN_P_GAIN 1
-#define MAIN_I_GAIN 1
-#define MAIN_D_GAIN 1
+#define MAIN_I_GAIN 0
+#define MAIN_D_GAIN 0
 #define MAIN_CONSTANT 50
 
 #define TAIL_P_GAIN 1
-#define TAIL_I_GAIN 1
-#define TAIL_D_GAIN 1
+#define TAIL_I_GAIN 0
+#define TAIL_D_GAIN 0
 #define TAIL_CONSTANT 50
 
 // ===================================== Globals ======================================
 uint8_t altSetpoint = 0; // The setpoint for the main rotor
 int16_t yawSetpoint = 0; // The setpoint for the tail rotor
 
+uint8_t mainRotorDuty = 0;
+uint8_t tailRotorDuty = 0;
+
+bool mainRotorEnabled = false;
+bool tailRotorEnabled = false;
+
 // ===================================== Function Definitions =========================
-/** 
- * @brief initilise the motor control module
- * 
+/**
+ * @brief Disable the motors
+ * @param motor the motor to disable
  */
-void MotorControl_init(void) {
-    PWM_init();
+void motorControl_disable(uint8_t motor) {
+    if (motor == MAIN_MOTOR) {
+        mainRotorEnabled = false;
+        PWM_set(DISABLE_DUTY, MAIN_MOTOR);
+    } else if (motor == TAIL_MOTOR) {
+        tailRotorEnabled = false;
+        PWM_set(DISABLE_DUTY, TAIL_MOTOR);
+    }
+}
 
-    MotorControl_disable(); // Ensure that motors are disabled
+/**
+ * @brief Enable the motors
+ * @param motor the motor to Enable
+ */
+void motorControl_enable(uint8_t motor) {
+    if (motor == MAIN_MOTOR) {
+        mainRotorEnabled = true;
+        PWM_set(ENABLE_DUTY, MAIN_MOTOR);
+    } else if (motor == TAIL_MOTOR) {
+        tailRotorEnabled = true;
+        PWM_set(ENABLE_DUTY, TAIL_MOTOR);
+    }
+}
 
-    MotorControl_setAltitudeSetpoint(0);
-    MotorControl_setYawSetpoint(0);
+/** 
+ * @brief set the duty cycle of the main rotor
+ * @param duty_cycle the duty cycle to set the main rotor 
+ * 
+ * @return uint8_t 0 if the duty cycle is out of range, 1 otherwise
+ */
+static uint8_t motorControl_setMainRotorDuty(uint8_t duty_cycle) {
+    // Check range
+    if (duty_cycle > 100) {
+        return 0; // Out of range
+    } else if (duty_cycle < 1) {
+        return 0; // Out of range
+    }
+
+    // Set the duty cycle
+    mainRotorDuty = duty_cycle;
+    PWM_set(duty_cycle, MAIN_MOTOR);
+    return 1;
+}
+
+
+/** 
+ * @brief set the duty cycle of the tail rotor
+ * @param duty_cycle the duty cycle to set the tail rotor 
+ * 
+ * @return uint8_t 0 if the duty cycle is out of range, 1 otherwise
+ */
+static uint8_t motorControl_setTailRotorDuty(uint8_t duty_cycle) {
+    // Check range
+    if (duty_cycle > 100) {
+        return 0; // Out of range
+    } else if (duty_cycle < 1) {
+        return 0; // Out of range
+    }
+
+    // Set the duty cycle
+    tailRotorDuty = duty_cycle;
+    PWM_set(duty_cycle, TAIL_MOTOR);
+    return 1;
 }
 
 
 /**
  * @brief update the controller error etc
- * @param deltaT the time since the last update
+ * @param deltaT the time since the last update [ms]
  * 
  */
-void MotorControl_update(uint32_t deltaT) {
+void motorControl_update(uint32_t deltaT) {
+    // Supporting variables
     static int32_t altErrorIntergrated = 0;
     static int32_t yawErrorIntergrated = 0;
 
@@ -59,14 +122,17 @@ void MotorControl_update(uint32_t deltaT) {
     static int16_t yawErrorPrevious = 0;
 
     // Update the altitude controller
-    int16_t altError = altSetpoint - Altitude_getAltitude();
+    int16_t currentAltitude = altitude_get();
+    if (currentAltitude < 0) {
+        currentAltitude = 0;
+    }
+    int16_t altError = altSetpoint - currentAltitude;
 
     altErrorIntergrated += altError * deltaT;
     int32_t altErrorDerivative = (altError - altErrorPrevious) / deltaT;
 
     int32_t mainRotorDuty = MAIN_P_GAIN * altError + MAIN_I_GAIN * altErrorIntergrated 
-                            + MAIN_D_GAIN * altErrorDerivative;
-                            + MAIN_CONSTANT; 
+                            + MAIN_D_GAIN * altErrorDerivative + MAIN_CONSTANT; 
 
     // Check the duty cycle is within range
     if (mainRotorDuty > 100) {
@@ -75,17 +141,16 @@ void MotorControl_update(uint32_t deltaT) {
         mainRotorDuty = 1;
     }
 
-    PWM_setMainRotorDuty(mainRotorDuty);
+    motorControl_setMainRotorDuty(mainRotorDuty);
 
     // Update the yaw controller
-    int16_t yawError = yawSetpoint - Yaw_getYaw();
+    int16_t yawError = yawSetpoint - yaw_get();
 
     yawErrorIntergrated += yawError * deltaT;
     int32_t yawErrorDerivative = (yawError - yawErrorPrevious) / deltaT;
 
     int32_t tailRotorDuty = TAIL_P_GAIN * yawError + TAIL_I_GAIN * yawErrorIntergrated 
-                            + TAIL_D_GAIN * yawErrorDerivative;
-                            + TAIL_CONSTANT;
+                            + TAIL_D_GAIN * yawErrorDerivative + TAIL_CONSTANT;
     
     // Check the duty cycle is within range
     if (tailRotorDuty > 100) {
@@ -94,7 +159,7 @@ void MotorControl_update(uint32_t deltaT) {
         tailRotorDuty = 1;
     }
 
-    PWM_setTailRotorDuty(tailRotorDuty);
+    motorControl_setTailRotorDuty(tailRotorDuty);
 
     // Update the previous error
     altErrorPrevious = altError;
@@ -106,7 +171,7 @@ void MotorControl_update(uint32_t deltaT) {
  * 
  * @param setpoint the new altitude setpoint
  */
-void MotorControl_setAltitudeSetpoint(uint32_t setpoint) {
+void motorControl_setAltitudeSetpoint(uint32_t setpoint) {
     altSetpoint = setpoint;
 }
 
@@ -115,20 +180,39 @@ void MotorControl_setAltitudeSetpoint(uint32_t setpoint) {
  * 
  * @param setpoint the new yaw setpoint
  */
-void MotorControl_setYawSetpoint(uint32_t setpoint);
-
-/**
- * @brief Enable the control modual
- * 
- */
-void MotorControl_enable(void) {
-    PWM_enable();
+void motorControl_setYawSetpoint(uint32_t setpoint) {
+    yawSetpoint = setpoint;
 }
 
-/**
- * @brief Disable the control modual
+/** 
+ * @brief Return the current duty cycle of the main rotor
+ * 
+ * @return uint8_t duty cycle of the main rotor
+ */
+uint8_t motorControl_getMainRotorDuty(void) {
+    return (mainRotorEnabled) ? mainRotorDuty : 0;
+}
+
+/** 
+ * @brief Return the current duty cycle of the tail rotor
+ * 
+ * @return uint8_t duty cycle of the tail rotor
+ */
+uint8_t motorControl_getTailRotorDuty(void) {
+    return (tailRotorEnabled) ? tailRotorDuty : 0;
+}
+
+/** 
+ * @brief initilise the motor control module
  * 
  */
-void MotorControl_disable(void) {
-    PWM_disable();
+void motorControl_init(void) {
+    PWM_init();
+
+    // Ensure that motors are disabled
+    motorControl_disable(MAIN_MOTOR); 
+    motorControl_disable(TAIL_MOTOR);
+
+    motorControl_setAltitudeSetpoint(0);
+    motorControl_setYawSetpoint(0);
 }
