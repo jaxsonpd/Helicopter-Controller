@@ -69,39 +69,48 @@ bool masterEnable = false; // Master enable for the PWM moduals
  */
 void PWM_set (uint8_t duty, uint8_t motor) {
     if (motor == MAIN_MOTOR) {
-        if (duty == 0) {
-            // Disable the output
-            PWMOutputState(PWM_MAIN_BASE, PWM_MAIN_OUTBIT, false);
-        } else if (duty == 101) {
-            // Enable the output
-            PWMOutputState(PWM_MAIN_BASE, PWM_MAIN_OUTBIT, true);
-        } else if (duty <= 100) {
-            // Calculate the PWM period corresponding to the freq.
-            uint32_t ui32Period =
-                SysCtlClockGet() / PWM_DIVIDER / PWM_RATE_MAIN_HZ;
+        // Calculate the PWM period corresponding to the freq.
+        uint32_t ui32Period = SysCtlClockGet() / PWM_DIVIDER / PWM_RATE_MAIN_HZ;
 
-            PWMGenPeriodSet(PWM_MAIN_BASE, PWM_MAIN_GEN, ui32Period);
-            PWMPulseWidthSet(PWM_MAIN_BASE, PWM_MAIN_OUTNUM,
-                ui32Period * duty / 100);
-        }
+        PWMGenPeriodSet(PWM_MAIN_BASE, PWM_MAIN_GEN, ui32Period);
+        PWMPulseWidthSet(PWM_MAIN_BASE, PWM_MAIN_OUTNUM,
+            ui32Period * duty / 100);
     }
 
     if (motor == TAIL_MOTOR) {
-        if (duty == 0) {
-            // Disable the output
-            PWMOutputState(PWM_TAIL_BASE, PWM_TAIL_OUTBIT, false);
-        } else if (duty == 101) {
-            // Enable the output
-            PWMOutputState(PWM_TAIL_BASE, PWM_TAIL_OUTBIT, true);
-        } else if (duty <= 100) {
-            // Calculate the PWM period corresponding to the freq.
-            uint32_t ui32Period =
-                SysCtlClockGet() / PWM_DIVIDER / PWM_RATE_TAIL_HZ;
-            
-            PWMGenPeriodSet(PWM_TAIL_BASE, PWM_TAIL_GEN, ui32Period);
-            PWMPulseWidthSet(PWM_TAIL_BASE, PWM_TAIL_OUTNUM,
-                ui32Period * duty / 100);
-        }
+        // Calculate the PWM period corresponding to the freq.
+        uint32_t ui32Period =
+            SysCtlClockGet() / PWM_DIVIDER / PWM_RATE_TAIL_HZ;
+        
+        PWMGenPeriodSet(PWM_TAIL_BASE, PWM_TAIL_GEN, ui32Period);
+        PWMPulseWidthSet(PWM_TAIL_BASE, PWM_TAIL_OUTNUM,
+            ui32Period * duty / 100);
+    }
+}
+
+/**
+ * @brief Disable the give PWM signal
+ * @param motor the motor to disable
+ * 
+ */
+void PWM_disable(uint8_t motor) {
+    if (motor == MAIN_MOTOR) {
+        PWMOutputState(PWM_MAIN_BASE, PWM_MAIN_OUTBIT, false);
+    } else if (motor == TAIL_MOTOR) {
+        PWMOutputState(PWM_TAIL_BASE, PWM_TAIL_OUTBIT, false);
+    }
+}
+
+/**
+ * @brief Enable the give PWM signal
+ * @param motor the motor to enable
+ * 
+ */
+void PWM_enable(uint8_t motor) {
+    if (motor == MAIN_MOTOR) {
+        PWMOutputState(PWM_MAIN_BASE, PWM_MAIN_OUTBIT, true);
+    } else if (motor == TAIL_MOTOR) {
+        PWMOutputState(PWM_TAIL_BASE, PWM_TAIL_OUTBIT, true);
     }
 }
 

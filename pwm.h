@@ -14,8 +14,6 @@
 #include <stdint.h>
 
 // ===================================== Constants ====================================
-#define ENABLE_DUTY 101
-#define DISABLE_DUTY 0
 
 // ===================================== Globals ======================================
 
@@ -35,5 +33,18 @@ void PWM_init(void);
  */
 void PWM_set (uint8_t duty, uint8_t motor);
 
+/**
+ * @brief Disable the give PWM signal
+ * @param motor the motor to disable
+ * 
+ */
+void PWM_disable(uint8_t motor);
+
+/**
+ * @brief Enable the give PWM signal
+ * @param motor the motor to enable
+ * 
+ */
+void PWM_enable(uint8_t motor);
 
 #endif // PWM_H

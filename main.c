@@ -56,6 +56,7 @@
 // ========================= Global Variables =========================
 bool slowTickFlag = false;
 
+uint32_t deltaT = 0; // the time between each PID loop update [ms]
 
 /**
  * @brief System tick interupt handler used to trigger the adc conversion
@@ -76,17 +77,17 @@ void SysTickInterupt_Handler(void) {
         slowTickFlag = true;
     }
 
+    // update the deltaT
+    deltaT += 1000 / SYSTICK_RATE_HZ; // [ms]
+
     // Initiate the next ADC conversion
     altitude_read(); // technically this should not be called in interupt handler but it is done in labs 3 and 4
-
-    // Update the button state
-    updateButtons(); // technically this should not be called in interupt handler but it is done in labs 3 and 4
-
 }
 
 
 /**
  * @brief Initialize the system clock (Taken from lab 4 code)
+ * @cite P.J. Bones	UCECE
  * 
  */
 void clock_init(void) {
@@ -163,17 +164,22 @@ int main(void) {
             #ifdef DEBUG
             sendSerial();
             #endif
-
-            // Display Altitude and yaw
-            displayYawAndAltitude(yaw_get(), altitude_get());
         }
 
-        // Reset the minimum altitude 
+        // Reset the minimum altitude check
         if (checkButton(LEFT) == PUSHED) {
             altitude_setMinimumAltitude();
         }
 
+        // Display Altitude and yaw
+        displayYawAndAltitude(yaw_get(), altitude_get());
+
         // Update the PID controller
-        motorControl_update(1000 / SYSTICK_RATE_HZ); // [ms]
+        motorControl_update(deltaT); // [ms]
+        deltaT = 0;
+
+        // Update the button state
+        updateButtons();
+
     }
 }

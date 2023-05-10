@@ -68,7 +68,7 @@ void motorControl_enable(uint8_t motor);
 /** 
  * @brief Return the current duty cycle of the main rotor
  * 
- * @return uint8_t duty cycle of the main rotor
+ * @return duty cycle of the main rotor
  */
 uint8_t motorControl_getMainRotorDuty(void);
 
@@ -76,7 +76,7 @@ uint8_t motorControl_getMainRotorDuty(void);
 /** 
  * @brief Return the current duty cycle of the tail rotor
  * 
- * @return uint8_t duty cycle of the tail rotor
+ * @return duty cycle of the tail rotor
  */
 uint8_t motorControl_getTailRotorDuty(void);
 
