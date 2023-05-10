@@ -114,26 +114,31 @@ static uint8_t motorControl_setTailRotorDuty(uint8_t duty_cycle) {
  * 
  */
 void motorControl_update(uint32_t deltaT) {
-    // Supporting variables
-    static int32_t altErrorIntergrated = 0;
-    static int32_t yawErrorIntergrated = 0;
-
-    static int16_t altErrorPrevious = 0;
-    static int16_t yawErrorPrevious = 0;
-
     // Update the altitude controller
-    int16_t currentAltitude = altitude_get();
-    if (currentAltitude < 0) { // Clean up the altitude
+    static int32_t altErrorIntergrated = 0;
+    static int16_t altErrorPrevious = 0;
+    
+
+    int16_t currentAltitude = 0;
+    int16_t altError = 0;
+    int32_t altErrorDerivative = 0;
+    int32_t mainRotorDuty = 0;
+
+    // Clean up the altitude
+    currentAltitude = altitude_get();
+    if (currentAltitude < 0) { 
         currentAltitude = 0;
     }
     
-    int16_t altError = altSetpoint - currentAltitude;
+    // Calculate errors
+    altError = altSetpoint - currentAltitude;
 
     altErrorIntergrated += altError * deltaT;
-    int32_t altErrorDerivative = (altError - altErrorPrevious) / deltaT;
+    altErrorDerivative = (altError - altErrorPrevious) / deltaT;
 
-    int32_t mainRotorDuty = (MAIN_P_GAIN * altError) + ((MAIN_I_GAIN * altErrorIntergrated) / 1000)
-                            + ((MAIN_D_GAIN * altErrorDerivative) / 1000) + (MAIN_CONSTANT); 
+    // Convert to Duty cycle (Divide by 1000 for ms -> s)
+    mainRotorDuty = (MAIN_P_GAIN * altError) + ((MAIN_I_GAIN * altErrorIntergrated) / 1000)
+                    + ((MAIN_D_GAIN * altErrorDerivative) / 1000) + (MAIN_CONSTANT); 
 
     // Limit the duty cycle to 1-100%
     if (mainRotorDuty > 100) {
@@ -145,13 +150,22 @@ void motorControl_update(uint32_t deltaT) {
     motorControl_setMainRotorDuty(mainRotorDuty);
 
     // Update the yaw controller
-    int16_t yawError = yawSetpoint - yaw_get();
+    static int32_t yawErrorIntergrated = 0;
+    static int16_t yawErrorPrevious = 0;
+
+    int16_t yawError = 0;
+    int32_t yawErrorDerivative = 0;
+    int32_t tailRotorDuty = 0;
+    
+    // Calculate errors
+    yawError = yawSetpoint - yaw_get();
 
     yawErrorIntergrated += yawError * deltaT;
-    int32_t yawErrorDerivative = (yawError - yawErrorPrevious) / deltaT;
+    yawErrorDerivative = (yawError - yawErrorPrevious) / deltaT;
 
-    int32_t tailRotorDuty = (TAIL_P_GAIN * yawError) + ((TAIL_I_GAIN * yawErrorIntergrated) / 1000) 
-                            + ((TAIL_D_GAIN * yawErrorDerivative) / 1000) + (TAIL_CONSTANT);
+    // Convert to duty cycle (Divide by 1000 for ms -> s and by 10 for degrees * 10 -> degrees)
+    tailRotorDuty = ((TAIL_P_GAIN * yawError) / 10) + (((TAIL_I_GAIN * yawErrorIntergrated) / 1000) / 10) 
+                    + (((TAIL_D_GAIN * yawErrorDerivative) / 1000) / 10) + (TAIL_CONSTANT);
     
     // Limit the duty cycle to 1-100%
     if (tailRotorDuty > 100) {
@@ -167,6 +181,7 @@ void motorControl_update(uint32_t deltaT) {
     yawErrorPrevious = yawError;
 }
 
+
 /**
  * @brief Change the altitude setpoint
  * 
@@ -175,6 +190,7 @@ void motorControl_update(uint32_t deltaT) {
 void motorControl_setAltitudeSetpoint(uint32_t setpoint) {
     altSetpoint = setpoint;
 }
+
 
 /**
  * @brief Change the yaw setpoint
@@ -185,6 +201,7 @@ void motorControl_setYawSetpoint(uint32_t setpoint) {
     yawSetpoint = setpoint;
 }
 
+
 /** 
  * @brief Return the current duty cycle of the main rotor
  * 
@@ -194,6 +211,7 @@ uint8_t motorControl_getMainRotorDuty(void) {
     return (mainRotorEnabled) ? mainRotorDuty : 0;
 }
 
+
 /** 
  * @brief Return the current duty cycle of the tail rotor
  * 
@@ -202,6 +220,7 @@ uint8_t motorControl_getMainRotorDuty(void) {
 uint8_t motorControl_getTailRotorDuty(void) {
     return (tailRotorEnabled) ? tailRotorDuty : 0;
 }
+
 
 /** 
  * @brief initilise the motor control module
