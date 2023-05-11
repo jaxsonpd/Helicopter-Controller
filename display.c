@@ -54,8 +54,10 @@ void initDisplay (void) {
  *
  * @param yaw The yaw taken from yaw_get() in yaw.c
  * @param altitude The altitude taken from altitude_get() in altitude.c
+ * @param motor1 The percentage of motor 1
+ * @param motor2 The percentage of motor 2 
 */
-void mainDisplay (int32_t yaw, int32_t altitude) {
+void mainDisplay (int32_t yaw, int32_t altitude, int8_t motor1, int8_t motor2) {
     char string1[17];
     char string2[17];
     char string3[17];
@@ -68,9 +70,9 @@ void mainDisplay (int32_t yaw, int32_t altitude) {
     OLEDStringDraw (string1, 0, 0);
     usnprintf(string2, sizeof(string2), "   ALT:  %3d%%     ", altitude);
     OLEDStringDraw (string2, 0, 1);
-    usnprintf(string3, sizeof(string3), "MOTOR1:  %3d%%     ", altitude);
+    usnprintf(string3, sizeof(string3), "MOTOR1:  %3d%%     ", motor1);
     OLEDStringDraw (string3, 0, 2);
-    usnprintf(string4, sizeof(string4), "MOTOR2:  %3d%%     ", altitude);
+    usnprintf(string4, sizeof(string4), "MOTOR2:  %3d%%     ", motor2);
     OLEDStringDraw (string4, 0, 3);
 }
 

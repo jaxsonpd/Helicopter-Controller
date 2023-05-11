@@ -11,3 +11,9 @@ Debug/*
 .vscode/*
 .metadata/*
 /Debug/
+/Release/
+/.vscode/
+/.settings/
+/.launches/
+/.metadata/
+/targetConfigs/

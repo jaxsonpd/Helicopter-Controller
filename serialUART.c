@@ -11,6 +11,7 @@
 // ========================= Include files =========================
 #include <stdint.h>
 #include <stdbool.h>
+#include "stdio.h"
 
 #include "inc/hw_memmap.h"
 #include "driverlib/sysctl.h"
@@ -18,8 +19,7 @@
 #include "driverlib/uart.h"
 #include "driverlib/pin_map.h"
 
-#include <debug.h>
-#include <serialUART.h>
+#include "serialUART.h"
 // ========================= Constants and types =========================
 //---USB Serial comms: UART0, Rx:PA0 , Tx:PA1
 #define BAUD_RATE 9600
@@ -65,10 +65,38 @@ void serialUART_init(uint32_t maxBufferSize) {
  * 
  * @param charBuffer The string of data to be sent
  */
-void serialUART_SendInformation(char *charBuffer) {
+static void serialUART_SendBuffer(char *charBuffer) {
     while (*charBuffer) {
         // Write the next character to the UART Tx.
         UARTCharPut(UART_USB_BASE, *charBuffer);
         charBuffer++;
     } 
+}
+
+/**
+ * @brief Send the serial infromation 
+ * @param desiredYaw The desired yaw
+ * @param currentYaw The current yaw
+ * @param desiredAltitude The desired altitude
+ * @param currentAltitude The current altitude
+ * @param motor1 The percentage of motor 1
+ * @param motor2 The percentage of motor 2
+ * 
+ */
+void serialUART_SendInformation(int32_t desiredYaw, int32_t currentYaw, int32_t desiredAltitude, int32_t currentAltitude, int8_t motor1, int8_t motor2) {
+    char string[200];
+
+    // Convert yaw
+    int32_t yaw = currentYaw;
+    int32_t degrees = yaw / 10;
+
+    // Find the decimal value an convert it to absolute value
+    int32_t decimalDegrees = (yaw < 0) ? yaw % 10 * -1 : yaw % 10;
+
+    // Send the information
+    usnprintf (string, sizeof(string), 
+       "Desired Yaw: %4d, Yaw: %4d.%1d, Desired Alt: %3d%%, Alt: %3d%%, Main Motor PWM: %3d%%, Tail Motor PWML %3d%%, Operating mode: \n\r",
+       desiredYaw, degrees, decimalDegrees, desiredAltitude, currentAltitude, motor1, motor2);
+
+    serialUART_SendBuffer(string);
 }

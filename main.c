@@ -12,6 +12,7 @@
 // ========================= Include files =========================
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 #include "inc/hw_memmap.h"
 #include "inc/hw_types.h"
@@ -29,7 +30,7 @@
 #include "OrbitOLED/OrbitOLEDInterface.h"
 
 #include "utils/ustdlib.h"
-#include "stdio.h"
+
 
 #include "circBufT.h"
 #include "buttons4.h"
@@ -58,6 +59,10 @@ bool slowTickFlag = false;
 
 uint32_t deltaT = 0; // the time between each PID loop update [ms]
 
+uint8_t altitudeSetpoint = 0;
+int16_t yawSetpoint = 0;
+
+// ========================= Function Definitions =========================
 /**
  * @brief System tick interupt handler used to trigger the adc conversion
  * 
@@ -107,28 +112,6 @@ void clock_init(void) {
 
 
 /**
- * @brief Send altitued information over serial UART
- * 
- */
-void sendSerial(void) {
-    // Send current altitude over UART
-    char string[200];
-
-    int32_t yaw = yaw_get();
-    int32_t degrees = yaw / 10;
-    // Find the decimal value an convert it to absolute value
-    int32_t decimalDegrees = (yaw < 0) ? yaw % 10 * -1 : yaw % 10;
-
-    usnprintf (string, sizeof(string), 
-       "Desired Yaw: %4d, Yaw: %4d.%1d, Desired Alt: %3d%, Alt: %3d%, Main Motor PWM: %3d%, Tail Motor PWML %3d%, Operating mode: \n\r",
-       YAW_SETPOINT, degrees, decimalDegrees, ALTITUDE_SETPOINT, altitude_get(), motorControl_getMainRotorDuty(), motorControl_getTailRotorDuty());
-    // usnprintf (string, sizeof(string), "Alt: %3d, Yaw: %3d, Pin: %1d \n\r", altitude_get(), yaw_get(), GPIOPinRead(YAW_ENC_CHA_PORT, YAW_ENC_CHA_PIN));
-
-    serialUART_SendInformation(string);
-}
-
-
-/**
  * @brief Main function for the helicopter control project
  * 
  * @return int 
@@ -152,6 +135,8 @@ int main(void) {
     // Test the PID loop
     motorControl_setAltitudeSetpoint(50);
     motorControl_setYawSetpoint(0);
+    altitudeSetpoint = 50;
+    yawSetpoint = 0;
 
     motorControl_enable(MAIN_MOTOR);
     motorControl_enable(TAIL_MOTOR);
@@ -163,15 +148,9 @@ int main(void) {
             slowTickFlag = false;
 
             #ifdef DEBUG
-            sendSerial();
+            serialUART_SendInformation(yawSetpoint, yaw_get(), altitudeSetpoint, altitude_get(), motorControl_getMainRotorDuty(), motorControl_getTailRotorDuty());
             #endif
         }
-
-        // Reset the minimum altitude check
-        if (checkButton(LEFT) == PUSHED) {
-            altitude_setMinimumAltitude();
-        }
-
 
         // Display Altitude and yaw
         displayYawAndAltitude(yaw_get(), altitude_get());

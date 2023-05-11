@@ -28,14 +28,14 @@
 #define TAIL_CONSTANT 50
 
 // ===================================== Globals ======================================
-uint8_t altSetpoint = 0; // The setpoint for the main rotor
-int16_t yawSetpoint = 0; // The setpoint for the tail rotor
+static uint8_t altSetpoint = 0; // The setpoint for the main rotor
+static int16_t yawSetpoint = 0; // The setpoint for the tail rotor
 
-uint8_t mainRotorDuty = 0;
-uint8_t tailRotorDuty = 0;
+static uint8_t mainRotorDuty = 0;
+static uint8_t tailRotorDuty = 0;
 
-bool mainRotorEnabled = false;
-bool tailRotorEnabled = false;
+static bool mainRotorEnabled = false;
+static bool tailRotorEnabled = false;
 
 // ===================================== Function Definitions =========================
 /**

@@ -21,6 +21,17 @@
  */
 void initDisplay(void);
 
+/**
+ * @brief Draws to the OLED Display the Yaw and Altitude
+ * @cite OLEDTest.c from the lab 3 folder author: P.J. Bones UCECE
+ *
+ * @param yaw The yaw taken from yaw_get() in yaw.c
+ * @param altitude The altitude taken from altitude_get() in altitude.c
+ * @param motor1 The percentage of motor 1
+ * @param motor2 The percentage of motor 2 
+*/
+void mainDisplay (int32_t yaw, int32_t altitude, int8_t motor1, int8_t motor2);
+
 
 /**
  * @brief Draws to the OLED Display the Yaw and Altitude

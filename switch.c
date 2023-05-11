@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+
 #include "inc/hw_memmap.h"
 #include "inc/hw_types.h"
 #include "driverlib/gpio.h"
@@ -14,13 +15,11 @@
 #include "driverlib/debug.h"
 #include "inc/tm4c123gh6pm.h"
 
+#include "switch.h"
 
 // ============================ Constants ====================================
 
 // Switch hardware configuration
-
-enum switchNames {SW1 = 1, SW2, NUM_SWITCHES};
-
 #define SW1_PERIPH_GPIO    SYSCTL_PERIPH_GPIOA
 #define SW1_GPIO_BASE      GPIO_PORTA_BASE
 #define SW1_GPIO_PIN       GPIO_PIN_7
@@ -30,12 +29,15 @@ enum switchNames {SW1 = 1, SW2, NUM_SWITCHES};
 
 // ============================ Globals ======================================
 
-static boolean switch_state[NUM_SWITCHES];
+static bool switch_state[NUM_SWITCHES];
 static uint8_t switch_count[NUM_SWITCHES];
 static uint8_t switch_flag[NUM_SWITCHES];
-static boolean switch_normal[NUM_SWITCHES];
+static bool switch_normal[NUM_SWITCHES];
 
-
+/**
+ * @brief Initialises the switchs
+ * 
+ */
 void initSwitch(void) {
     SysCtlPeripheralEnable (SW1_PERIPH_GPIO);
     GPIOPinTypeGPIOInput (SW1_GPIO_BASE, SW1_GPIO_PIN);
@@ -47,6 +49,11 @@ void initSwitch(void) {
 
 }
 
+
+/**
+ * @brief Updates the switches (Debounce)
+ * 
+ */
 void updateSwitches(void) {
     bool switch_value[NUM_SWITCHES];
 
@@ -54,25 +61,30 @@ void updateSwitches(void) {
 
     if (switch_value[SW1] != switch_state[SW1]) {
         switch_count[SW1]++;
-        if (switch_count[SW1] >= NUM_switch_POLLS)
-        {
+        if (switch_count[SW1] >= NUM_SWITCH_POLLS) {
             switch_state[SW1] = switch_value[SW1];
             switch_flag[SW1] = true;
             switch_count[SW1] = 0;
         }
-    } else
+    } else {
         switch_count[SW1] = 0;
     }
 }
 
+/**
+ * @brief Return the switch state
+ * 
+ * @param switchName 
+ * @return uint8_t 
+ */
 uint8_t checkSwitch (uint8_t switchName) {
-    if (switch_flag[switchName])
-        {
+    if (switch_flag[switchName]) {
             switch_flag[switchName] = false;
-            if (switch_state[switchName] == switch_normal[switchName])
+            if (switch_state[switchName] == switch_normal[switchName]) {
                 return RELEASED;
-            else
+            } else {
                 return PUSHED;
+            }
         }
     return NO_CHANGE;
 }
