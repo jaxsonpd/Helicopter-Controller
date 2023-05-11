@@ -38,6 +38,7 @@
 #include "altitude.h"
 #include "display.h"
 #include "yaw.h"
+#include "MotorControl.h"
 
 
 // ========================= Constants and types =========================
@@ -46,7 +47,7 @@
 
 #define CIRC_BUFFER_SIZE 8 // size of the circular buffer used to store the altitued samples
 
-// #define DEBUG // Sends information over serial UART
+#define DEBUG // Sends information over serial UART
 
 // Channel A input pin for yaw (J1-03)
 #define YAW_ENC_CHA_PIN GPIO_PIN_0 
@@ -55,6 +56,7 @@
 // ========================= Global Variables =========================
 bool slowTickFlag = false;
 
+uint32_t deltaT = 0; // the time between each PID loop update [ms]
 
 /**
  * @brief System tick interupt handler used to trigger the adc conversion
@@ -75,16 +77,17 @@ void SysTickInterupt_Handler(void) {
         slowTickFlag = true;
     }
 
+    // update the deltaT
+    deltaT += 1000 / SYSTICK_RATE_HZ; // [ms]
+
     // Initiate the next ADC conversion
     altitude_read(); // technically this should not be called in interupt handler but it is done in labs 3 and 4
-
-    // Update the button state
-    updateButtons(); // technically this should not be called in interupt handler but it is done in labs 3 and 4
 }
 
 
 /**
  * @brief Initialize the system clock (Taken from lab 4 code)
+ * @cite P.J. Bones	UCECE
  * 
  */
 void clock_init(void) {
@@ -111,12 +114,6 @@ void sendSerial(void) {
     // Send current altitude over UART
     char string[200];
 
-    uint8_t yaw_raw = yaw_getChannels();
-    bool channelA = yaw_raw & 1; 
-    bool channelB = yaw_raw & (1 << 1);
-    bool channelA_prev = yaw_raw & (1 << 2);
-    bool channelB_prev = yaw_raw & (1 << 3);
-
     int32_t yaw = yaw_get();
     int32_t degrees = yaw / 10;
     // Find the decimal value an convert it to absolute value
@@ -142,14 +139,22 @@ int main(void) {
     serialUART_init();
     altitude_init(CIRC_BUFFER_SIZE);
     initButtons ();
-    initDisplay ();
+    
+    initDisplay (); 
     yaw_init ();
+    motorControl_init();
 
     altitude_setMinimumAltitude(); // Set the minimum altitude to the current altitude
 
     // Enable interrupts to the processor.
     IntMasterEnable();
+    
+    // Test the PID loop
+    motorControl_setAltitudeSetpoint(50);
+    motorControl_setYawSetpoint(0);
 
+    motorControl_enable(MAIN_MOTOR);
+    motorControl_enable(TAIL_MOTOR);
 
     // ========================= Main Loop =========================
     while (1) {
@@ -162,7 +167,7 @@ int main(void) {
             #endif
         }
 
-        // Reset the minimum altitude 
+        // Reset the minimum altitude check
         if (checkButton(LEFT) == PUSHED) {
             altitude_setMinimumAltitude();
         }
@@ -170,5 +175,13 @@ int main(void) {
 
         // Display Altitude and yaw
         displayYawAndAltitude(yaw_get(), altitude_get());
+
+        // Update the PID controller
+        motorControl_update(deltaT); // [ms]
+        deltaT = 0;
+
+        // Update the button state
+        updateButtons();
+
     }
 }

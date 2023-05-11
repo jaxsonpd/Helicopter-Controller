@@ -17,13 +17,11 @@
 #include "driverlib/adc.h"
 #include "driverlib/pwm.h"
 #include "driverlib/gpio.h"
-#include "driverlib/uart.h"
 #include "driverlib/sysctl.h"
 #include "driverlib/systick.h"
 #include "driverlib/interrupt.h"
 #include "driverlib/debug.h"
 #include "driverlib/pin_map.h"
-#include "OrbitOLED/OrbitOLEDInterface.h"
 
 #include "utils/ustdlib.h"
 #include "stdio.h"

@@ -32,7 +32,7 @@
 
 
 // ========================= Constants and types =========================
-// #define DEBUG // Change analog input channel to 0 for debugging
+#define DEBUG // Change analog input channel to 0 for debugging
 #define DEBUG_ADC_CHANNEL ADC_CTL_CH0 // Use analog input channel 0 for debugging
 #define ALTITUDE_ADC_CHANNEL ADC_CTL_CH9 // Use analog input channel 9 for actual altitude
 
