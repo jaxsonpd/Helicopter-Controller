@@ -120,8 +120,9 @@ void sendSerial(void) {
     int32_t decimalDegrees = (yaw < 0) ? yaw % 10 * -1 : yaw % 10;
 
     usnprintf (string, sizeof(string), 
-       "Alt: %4d, Yaw: %4d.%1d, Main: %3u%%, Tail: %3u%%\r\n", 
-       altitude_get(), degrees, decimalDegrees, motorControl_getMainRotorDuty(), motorControl_getTailRotorDuty());
+       "Desired Yaw: %4d, Yaw: %4d.%1d, Desired Alt: %3d%, Alt: %3d%, Main Motor PWM: %3d%, Tail Motor PWML %3d%, Operating mode: \n\r",
+       YAW_SETPOINT, degrees, decimalDegrees, ALTITUDE_SETPOINT, altitude_get(), motorControl_getMainRotorDuty(), motorControl_getTailRotorDuty());
+    // usnprintf (string, sizeof(string), "Alt: %3d, Yaw: %3d, Pin: %1d \n\r", altitude_get(), yaw_get(), GPIOPinRead(YAW_ENC_CHA_PORT, YAW_ENC_CHA_PIN));
 
     serialUART_SendInformation(string);
 }
@@ -170,6 +171,7 @@ int main(void) {
         if (checkButton(LEFT) == PUSHED) {
             altitude_setMinimumAltitude();
         }
+
 
         // Display Altitude and yaw
         displayYawAndAltitude(yaw_get(), altitude_get());
