@@ -55,6 +55,32 @@ void initDisplay (void) {
  * @param yaw The yaw taken from yaw_get() in yaw.c
  * @param altitude The altitude taken from altitude_get() in altitude.c
 */
+void mainDisplay (int32_t yaw, int32_t altitude) {
+    char string1[17];
+    char string2[17];
+    char string3[17];
+    char string4[17];
+
+    int32_t degrees = yaw / 10;
+    int32_t decimalDegrees = (yaw < 0) ? yaw % 10 * -1 : yaw % 10;
+
+    usnprintf(string1, sizeof(string1), "   YAW:  %4d.%1d   ", degrees, decimalDegrees);
+    OLEDStringDraw (string1, 0, 0);
+    usnprintf(string2, sizeof(string2), "   ALT:  %3d%%     ", altitude);
+    OLEDStringDraw (string2, 0, 1);
+    usnprintf(string3, sizeof(string3), "MOTOR1:  %3d%%     ", altitude);
+    OLEDStringDraw (string3, 0, 2);
+    usnprintf(string4, sizeof(string4), "MOTOR2:  %3d%%     ", altitude);
+    OLEDStringDraw (string4, 0, 3);
+}
+
+/**
+ * @brief Draws to the OLED Display the Yaw and Altitude
+ * @cite OLEDTest.c from the lab 3 folder author: P.J. Bones UCECE
+ *
+ * @param yaw The yaw taken from yaw_get() in yaw.c
+ * @param altitude The altitude taken from altitude_get() in altitude.c
+*/
 void displayYawAndAltitude (int32_t yaw, int32_t altitude) {
     char string[17];
     char string2[17];
