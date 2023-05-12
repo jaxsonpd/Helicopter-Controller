@@ -33,6 +33,7 @@ static bool switch_state[NUM_SWITCHES];
 static uint8_t switch_count[NUM_SWITCHES];
 static uint8_t switch_flag[NUM_SWITCHES];
 static bool switch_normal[NUM_SWITCHES];
+bool switch_value[NUM_SWITCHES];
 
 /**
  * @brief Initialises the switchs
@@ -45,7 +46,7 @@ void initSwitch(void) {
     switch_normal[SW1] = SW1_NORMAL;
     switch_state[SW1] = SW1_NORMAL;
     switch_count[SW1] = 0;
-    switch_flag[SW1] = 0;
+    switch_flag[SW1] = false;
 
 }
 
@@ -54,8 +55,7 @@ void initSwitch(void) {
  * @brief Updates the switches (Debounce)
  * 
  */
-void updateSwitches(void) {
-    bool switch_value[NUM_SWITCHES];
+void updateSwitch(void) {
 
     switch_value[SW1] = (GPIOPinRead (SW1_GPIO_BASE, SW1_GPIO_PIN) == SW1_GPIO_PIN);
 
@@ -81,12 +81,12 @@ uint8_t checkSwitch (uint8_t switchName) {
     if (switch_flag[switchName]) {
             switch_flag[switchName] = false;
             if (switch_state[switchName] == switch_normal[switchName]) {
-                return RELEASED;
+                return SWITCH_DOWN;
             } else {
-                return PUSHED;
+                return SWITCH_UP;
             }
         }
-    return NO_CHANGE;
+    return SWITCH_NO_CHANGE;
 }
 
 

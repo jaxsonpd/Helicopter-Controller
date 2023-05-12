@@ -30,7 +30,7 @@ void initDisplay(void);
  * @param motor1 The percentage of motor 1
  * @param motor2 The percentage of motor 2 
 */
-void mainDisplay (int32_t yaw, int32_t altitude, int8_t motor1, int8_t motor2);
+void mainDisplay (int32_t yaw, int32_t altitude, int8_t motor1, int8_t motor2, uint8_t mode);
 
 
 /**

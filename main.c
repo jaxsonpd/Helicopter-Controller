@@ -40,6 +40,7 @@
 #include "display.h"
 #include "yaw.h"
 #include "MotorControl.h"
+#include "switch.h"
 
 
 // ========================= Constants and types =========================
@@ -54,6 +55,10 @@
 #define YAW_ENC_CHA_PIN GPIO_PIN_0 
 #define YAW_ENC_CHA_PORT GPIO_PORTB_BASE
 
+enum MAIN_STATE {LANDED, FLYING, LANDING, TAKING_OFF};
+enum TAKE_OFF_STATE {TAKEOFF_START, TAKE_OFF_ROTATE, TAKE_OFF_RISING, TAKE_OFF_DONE};
+enum LANDING_STATE {LANDING_START, LANDING_ROTATE, LANDING_DESCENDING, LANDING_DONE};
+
 // ========================= Global Variables =========================
 bool slowTickFlag = false;
 
@@ -61,6 +66,8 @@ uint32_t deltaT = 0; // the time between each PID loop update [ms]
 
 uint8_t altitudeSetpoint = 0;
 int16_t yawSetpoint = 0;
+
+uint8_t state = 0; // the current state of the helicopter
 
 // ========================= Function Definitions =========================
 /**
@@ -111,7 +118,100 @@ void clock_init(void) {
 }
 
 
+/**
+ * @brief Take off the helicopter
+ * 
+ */
+void heli_takeoff(void) {
+    static uint8_t takeOffState = 0;
 
+    switch (takeOffState) {
+    case TAKEOFF_START:
+        motorControl_enable(MAIN_MOTOR);
+        motorControl_enable(TAIL_MOTOR);
+
+        motorControl_setAltitudeSetpoint(0);
+        motorControl_setYawSetpoint(0);
+
+        takeOffState = TAKE_OFF_ROTATE;
+        break;
+
+    case TAKE_OFF_ROTATE:
+        if (true) {
+            yaw_reset();
+            motorControl_setYawSetpoint(0);
+
+            takeOffState = TAKE_OFF_RISING;
+        } else {
+            motorControl_setYawSetpoint(yaw_get() + 5);
+        }
+        break;
+    
+    case TAKE_OFF_RISING:
+        if (altitude_get() >= 10) {
+            takeOffState = TAKE_OFF_DONE;
+        }
+
+        motorControl_setAltitudeSetpoint(10);
+        break;
+    
+    case TAKE_OFF_DONE:
+        takeOffState = TAKEOFF_START;
+        state = FLYING;
+        break;
+    }
+}
+
+
+/**
+ * @brief Land the helicopter
+ * 
+ */
+void heli_land(void) {
+    static uint8_t landingState = 0;
+    static uint16_t referenceTimer = 0;
+
+    switch (landingState) {
+    case LANDING_START:
+        if (altitude_get() <= 10) {
+            landingState = LANDING_ROTATE;
+        }
+
+        motorControl_setAltitudeSetpoint(10);
+        break;
+
+    case LANDING_ROTATE:
+        if (yaw_get() == 0) {
+            referenceTimer += 1;
+            if (referenceTimer > 100) {
+                referenceTimer = 0;
+                landingState = LANDING_DESCENDING;
+            }
+        } else {
+            referenceTimer = 0;	
+        }
+
+        motorControl_setAltitudeSetpoint(10);
+        motorControl_setYawSetpoint(0);
+        break;
+
+    case LANDING_DESCENDING:
+        if (altitude_get() < 1) {
+            landingState = LANDING_DONE;
+        }
+
+        motorControl_setAltitudeSetpoint(0);
+        break;
+
+    case LANDING_DONE:
+        motorControl_disable(MAIN_MOTOR);
+        motorControl_disable(TAIL_MOTOR);
+
+        landingState = LANDING_START;
+        state = LANDED;
+        break;
+    }
+}
 
 
 
@@ -126,6 +226,7 @@ int main(void) {
     serialUART_init();
     altitude_init(CIRC_BUFFER_SIZE);
     initButtons ();
+    initSwitch ();
     
     initDisplay (); 
     yaw_init ();
@@ -142,9 +243,6 @@ int main(void) {
     altitudeSetpoint = 0;
     yawSetpoint = 0;
 
-    motorControl_enable(MAIN_MOTOR);
-    motorControl_enable(TAIL_MOTOR);
-
     // ========================= Main Loop =========================
     while (1) {
         // Check if the slow tick flag is set
@@ -152,7 +250,7 @@ int main(void) {
             slowTickFlag = false;
 
             #ifdef DEBUG
-            serialUART_SendInformation(yawSetpoint, yaw_get(), altitudeSetpoint, altitude_get(), motorControl_getMainRotorDuty(), motorControl_getTailRotorDuty());
+            serialUART_SendInformation(yawSetpoint, yaw_get(), altitudeSetpoint, altitude_get(), motorControl_getMainRotorDuty(), motorControl_getTailRotorDuty(), state);
             #endif
         }
 
@@ -163,30 +261,55 @@ int main(void) {
         motorControl_update(deltaT); // [ms]
         deltaT = 0;
 
-        // Change altitude setpoint
-        if (checkButton(UP) == PUSHED) {
-            altitudeSetpoint += 10;
-            motorControl_setAltitudeSetpoint(altitudeSetpoint);
-        }
-        else if (checkButton(DOWN) == PUSHED) {
-            altitudeSetpoint -= 10;
-            motorControl_setAltitudeSetpoint(altitudeSetpoint);
-        }
-
-        // Check yaw
-        if (checkButton(LEFT) == PUSHED) {
-            yawSetpoint -= 150;
-            yawSetpoint = (yawSetpoint <= -1800) ? yawSetpoint + 3600 : yawSetpoint;
-            motorControl_setYawSetpoint(yawSetpoint);
-        }
-        else if (checkButton(RIGHT) == PUSHED) {
-            yawSetpoint += 150;
-            yawSetpoint = (yawSetpoint > 1800) ? yawSetpoint - 3600 : yawSetpoint;
-            motorControl_setYawSetpoint(yawSetpoint);
-        }
-
         // Update the button state
         updateButtons();
 
+        // Update the switches
+        updateSwitch();
+
+        // FSM
+        switch (state) {
+        case LANDED:
+            if (checkSwitch(SW1) == SWITCH_UP) {
+                state = TAKING_OFF;
+            }
+            break;
+        
+        case TAKING_OFF:
+            heli_takeoff();
+            break;
+        
+        case FLYING:
+            if (checkSwitch(SW1) == SWITCH_DOWN) {
+                state = LANDING;
+            }
+
+            // Change altitude setpoint
+            if (checkButton(UP) == PUSHED) {
+                altitudeSetpoint += 10;
+                motorControl_setAltitudeSetpoint(altitudeSetpoint);
+            }
+            else if (checkButton(DOWN) == PUSHED) {
+                altitudeSetpoint -= 10;
+                motorControl_setAltitudeSetpoint(altitudeSetpoint);
+            }
+
+            // Check yaw
+            if (checkButton(LEFT) == PUSHED) {
+                yawSetpoint -= 150;
+                yawSetpoint = (yawSetpoint <= -1800) ? yawSetpoint + 3600 : yawSetpoint;
+                motorControl_setYawSetpoint(yawSetpoint);
+            }
+            else if (checkButton(RIGHT) == PUSHED) {
+                yawSetpoint += 150;
+                yawSetpoint = (yawSetpoint > 1800) ? yawSetpoint - 3600 : yawSetpoint;
+                motorControl_setYawSetpoint(yawSetpoint);
+            }
+            break;
+        
+        case LANDING:
+            heli_land();
+            break;        
+        }
     }
 }

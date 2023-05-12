@@ -14,8 +14,8 @@
 #include <stdint.h>
 
 // ===================================== Constants ====================================
-enum switchNames {SW1 = 1, SW2, NUM_SWITCHES};
-enum switchStates {RELEASED = 0, PUSHED, NO_CHANGE};
+enum switchNames {SW1 = 0, NUM_SWITCHES};
+enum switchStates {SWITCH_DOWN = 0, SWITCH_UP, SWITCH_NO_CHANGE};
 
 // ===================================== Function Prototypes ==========================
 /**
@@ -36,5 +36,6 @@ void updateSwitches(void);
  * @param switchName 
  * @return uint8_t 
  */
+uint8_t checkSwitch (uint8_t switchName);
 
 #endif // SWITCH_T

@@ -56,6 +56,7 @@ void initDisplay (void) {
  * @param altitude The altitude taken from altitude_get() in altitude.c
  * @param motor1 The percentage of motor 1
  * @param motor2 The percentage of motor 2 
+ * 
 */
 void mainDisplay (int32_t yaw, int32_t altitude, int8_t motor1, int8_t motor2) {
     char string1[17];

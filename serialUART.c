@@ -81,9 +81,10 @@ static void serialUART_SendBuffer(char *charBuffer) {
  * @param currentAltitude The current altitude
  * @param motor1 The percentage of motor 1
  * @param motor2 The percentage of motor 2
+ * @param mode The current mode
  * 
  */
-void serialUART_SendInformation(int32_t desiredYaw, int32_t currentYaw, int32_t desiredAltitude, int32_t currentAltitude, int8_t motor1, int8_t motor2) {
+void serialUART_SendInformation(int32_t desiredYaw, int32_t currentYaw, int32_t desiredAltitude, int32_t currentAltitude, int8_t motor1, int8_t motor2, uint8_t mode) {
     char string[200];
 
     // Convert yaw
@@ -100,8 +101,8 @@ void serialUART_SendInformation(int32_t desiredYaw, int32_t currentYaw, int32_t 
 
     // Send the information
     usnprintf (string, sizeof(string), 
-       "Yaw: %4d.%1d [%4d.%1d], Alt: %3d%% [%3d%%], Main: %3d%%, Tail: %3d%%, Mode: \n\r",
-       degrees, decimalDegrees, desiredDegrees, desiredDecimalDegrees, currentAltitude, desiredAltitude, motor1, motor2);
+       "Yaw: %4d.%1d [%4d.%1d], Alt: %3d%% [%3d%%], Main: %3d%%, Tail: %3d%%, Mode: %1d\n\r",
+       degrees, decimalDegrees, desiredDegrees, desiredDecimalDegrees, currentAltitude, desiredAltitude, motor1, motor2, mode);
 
     serialUART_SendBuffer(string);
 }

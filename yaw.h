@@ -46,4 +46,10 @@ int32_t yaw_getEncoderValue(void);
  */
 uint8_t yaw_getChannels(void);
 
+/**
+ * @brief Reset the yaw encoder value to zero
+ * 
+ */
+void yaw_reset(void);
+
 #endif /* YAW_H */

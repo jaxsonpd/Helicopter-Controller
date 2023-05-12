@@ -154,3 +154,11 @@ int32_t yaw_getEncoderValue(void) {
 uint8_t yaw_getChannels(void) {
     return ((GPIOPinRead(YAW_ENC_CHA_PORT, YAW_ENC_CHA_PIN)) | (GPIOPinRead(YAW_ENC_CHB_PORT, YAW_ENC_CHB_PIN) << 1) | (channelA_prev << 2) | (channelB_prev << 3));
 }
+
+/**
+ * @brief Reset the yaw encoder value to zero
+ * 
+ */
+void yaw_reset(void) {
+    encoderValue = 0;
+}

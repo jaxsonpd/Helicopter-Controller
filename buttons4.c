@@ -33,6 +33,7 @@ static bool but_state[NUM_BUTS];	// Corresponds to the electrical state
 static uint8_t but_count[NUM_BUTS];
 static bool but_flag[NUM_BUTS];
 static bool but_normal[NUM_BUTS];   // Corresponds to the electrical state
+bool but_value[NUM_BUTS];
 
 // *******************************************************
 // initButtons: Initialise the variables associated with the set of buttons
@@ -94,7 +95,7 @@ initButtons (void)
 void
 updateButtons (void)
 {
-	bool but_value[NUM_BUTS];
+
 	int i;
 	
 	// Read the pins; true means HIGH, false means LOW

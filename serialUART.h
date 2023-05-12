@@ -28,8 +28,9 @@ void serialUART_init();
  * @param currentAltitude The current altitude
  * @param motor1 The percentage of motor 1
  * @param motor2 The percentage of motor 2
+ * @param mode The current mode
  * 
  */
-void serialUART_SendInformation(int32_t desiredYaw, int32_t currentYaw, int32_t desiredAltitude, int32_t currentAltitude, int8_t motor1, int8_t motor2);
+void serialUART_SendInformation(int32_t desiredYaw, int32_t currentYaw, int32_t desiredAltitude, int32_t currentAltitude, int8_t motor1, int8_t motor2, uint8_t mode);
 
 #endif /* SERIALUART_H */
