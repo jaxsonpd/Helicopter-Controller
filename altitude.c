@@ -32,7 +32,7 @@
 
 
 // ========================= Constants and types =========================
-#define DEBUG // Change analog input channel to 0 for debugging
+// #define DEBUG // Change analog input channel to 0 for debugging
 #define DEBUG_ADC_CHANNEL ADC_CTL_CH0 // Use analog input channel 0 for debugging
 #define ALTITUDE_ADC_CHANNEL ADC_CTL_CH9 // Use analog input channel 9 for actual altitude
 
@@ -137,7 +137,7 @@ int32_t altitude_get(void) {
 
     // Convert to percentage percentage = -0.0854*adc + 192 ( c value will change with min adc value)
     // multiply by 10 to get 1 decimal place precision back
-    return ((average * 10 / -ALTITUDE_GRADIENT) + (minAltitudeADC * 10 / ALTITUDE_GRADIENT));
+    return (minAltitudeADC - average) * 100 / 1241 ;
 }
 
 

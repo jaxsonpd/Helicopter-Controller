@@ -131,15 +131,15 @@ int main(void) {
     yaw_init ();
     motorControl_init();
 
-    altitude_setMinimumAltitude(); // Set the minimum altitude to the current altitude
-
     // Enable interrupts to the processor.
     IntMasterEnable();
     
+    altitude_setMinimumAltitude(); // Set the minimum altitude to the current altitude
+    
     // Test the PID loop
-    motorControl_setAltitudeSetpoint(50);
+    motorControl_setAltitudeSetpoint(0);
     motorControl_setYawSetpoint(0);
-    altitudeSetpoint = 50;
+    altitudeSetpoint = 0;
     yawSetpoint = 0;
 
     motorControl_enable(MAIN_MOTOR);
@@ -162,6 +162,28 @@ int main(void) {
         // Update the PID controller
         motorControl_update(deltaT); // [ms]
         deltaT = 0;
+
+        // Change altitude setpoint
+        if (checkButton(UP) == PUSHED) {
+            altitudeSetpoint += 10;
+            motorControl_setAltitudeSetpoint(altitudeSetpoint);
+        }
+        else if (checkButton(DOWN) == PUSHED) {
+            altitudeSetpoint -= 10;
+            motorControl_setAltitudeSetpoint(altitudeSetpoint);
+        }
+
+        // Check yaw
+        if (checkButton(LEFT) == PUSHED) {
+            yawSetpoint -= 150;
+            yawSetpoint = (yawSetpoint <= -1800) ? yawSetpoint + 3600 : yawSetpoint;
+            motorControl_setYawSetpoint(yawSetpoint);
+        }
+        else if (checkButton(RIGHT) == PUSHED) {
+            yawSetpoint += 150;
+            yawSetpoint = (yawSetpoint > 1800) ? yawSetpoint - 3600 : yawSetpoint;
+            motorControl_setYawSetpoint(yawSetpoint);
+        }
 
         // Update the button state
         updateButtons();
