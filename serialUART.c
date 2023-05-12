@@ -87,16 +87,21 @@ void serialUART_SendInformation(int32_t desiredYaw, int32_t currentYaw, int32_t 
     char string[200];
 
     // Convert yaw
-    int32_t yaw = currentYaw;
-    int32_t degrees = yaw / 10;
+    int32_t degrees = currentYaw / 10;
 
     // Find the decimal value an convert it to absolute value
-    int32_t decimalDegrees = (yaw < 0) ? yaw % 10 * -1 : yaw % 10;
+    int32_t decimalDegrees = (currentYaw < 0) ? currentYaw % 10 * -1 : currentYaw % 10;
+
+    // Convert yaw
+    int32_t desiredDegrees = desiredYaw / 10;
+
+    // Find the decimal value an convert it to absolute value
+    int32_t desiredDecimalDegrees = (desiredYaw < 0) ? desiredYaw % 10 * -1 : desiredYaw % 10;
 
     // Send the information
     usnprintf (string, sizeof(string), 
-       "Desired Yaw: %4d, Yaw: %4d.%1d, Desired Alt: %3d%%, Alt: %3d%%, Main Motor PWM: %3d%%, Tail Motor PWML %3d%%, Operating mode: \n\r",
-       desiredYaw, degrees, decimalDegrees, desiredAltitude, currentAltitude, motor1, motor2);
+       "Yaw: %4d.%1d [%4d.%1d], Alt: %3d%% [%3d%%], Main: %3d%%, Tail: %3d%%, Mode: \n\r",
+       degrees, decimalDegrees, desiredDegrees, desiredDecimalDegrees, currentAltitude, desiredAltitude, motor1, motor2);
 
     serialUART_SendBuffer(string);
 }

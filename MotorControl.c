@@ -27,6 +27,9 @@
 #define TAIL_D_GAIN 0
 #define TAIL_CONSTANT 50
 
+#define MAX_MAIN_DUTY 70
+#define MAX_TAIL_DUTY 70
+
 // ===================================== Globals ======================================
 static uint8_t altSetpoint = 0; // The setpoint for the main rotor
 static int16_t yawSetpoint = 0; // The setpoint for the tail rotor
@@ -118,7 +121,6 @@ void motorControl_update(uint32_t deltaT) {
     static int32_t altErrorIntergrated = 0;
     static int16_t altErrorPrevious = 0;
     
-
     int16_t currentAltitude = 0;
     int16_t altError = 0;
     int32_t altErrorDerivative = 0;
@@ -141,8 +143,8 @@ void motorControl_update(uint32_t deltaT) {
                     + ((MAIN_D_GAIN * altErrorDerivative) / 1000) + (MAIN_CONSTANT); 
 
     // Limit the duty cycle to 1-100%
-    if (mainRotorDuty > 100) {
-        mainRotorDuty = 100;
+    if (mainRotorDuty > MAX_MAIN_DUTY) {
+        mainRotorDuty = MAX_MAIN_DUTY;
     } else if (mainRotorDuty < 1) {
         mainRotorDuty = 1;
     }
@@ -168,8 +170,8 @@ void motorControl_update(uint32_t deltaT) {
                     + (((TAIL_D_GAIN * yawErrorDerivative) / 1000) / 10) + (TAIL_CONSTANT);
     
     // Limit the duty cycle to 1-100%
-    if (tailRotorDuty > 100) {
-        tailRotorDuty = 100;
+    if (tailRotorDuty > MAX_TAIL_DUTY) {
+        tailRotorDuty = MAX_TAIL_DUTY;
     } else if (tailRotorDuty < 1) {
         tailRotorDuty = 1;
     }
