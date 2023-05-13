@@ -1,7 +1,7 @@
 /*
  * @file main.c
  * @brief Main file for the helicopter control project
- * @author Jack Duignan
+ * @author Jack Duignan (jdu80@uclive.ac.nz), Daniel Hawes
  * @date 2023-03-12
  * 
  * This file contains the main function for the helicopter control project. 
@@ -30,7 +30,6 @@
 #include "OrbitOLED/OrbitOLEDInterface.h"
 
 #include "utils/ustdlib.h"
-
 
 #include "circBufT.h"
 #include "buttons4.h"
@@ -132,6 +131,8 @@ void heli_takeoff(void) {
 
         motorControl_setAltitudeSetpoint(0);
         motorControl_setYawSetpoint(0);
+        altitudeSetpoint = 0;
+        yawSetpoint = 0;
 
         takeOffState = TAKE_OFF_ROTATE;
         break;
@@ -144,6 +145,7 @@ void heli_takeoff(void) {
             takeOffState = TAKE_OFF_RISING;
         } else {
             motorControl_setYawSetpoint(yaw_get() + 5);
+            yawSetpoint = yaw_get() + 5;
         }
         break;
     
@@ -153,6 +155,7 @@ void heli_takeoff(void) {
         }
 
         motorControl_setAltitudeSetpoint(10);
+        altitudeSetpoint = 10;
         break;
     
     case TAKE_OFF_DONE:
@@ -178,6 +181,7 @@ void heli_land(void) {
         }
 
         motorControl_setAltitudeSetpoint(10);
+        altitudeSetpoint = 10; 
         break;
 
     case LANDING_ROTATE:
@@ -193,6 +197,8 @@ void heli_land(void) {
 
         motorControl_setAltitudeSetpoint(10);
         motorControl_setYawSetpoint(0);
+        altitudeSetpoint = 10;
+        yawSetpoint = 0;
         break;
 
     case LANDING_DESCENDING:
@@ -201,6 +207,7 @@ void heli_land(void) {
         }
 
         motorControl_setAltitudeSetpoint(0);
+        altitudeSetpoint = 0;
         break;
 
     case LANDING_DONE:
@@ -237,7 +244,6 @@ int main(void) {
     
     altitude_setMinimumAltitude(); // Set the minimum altitude to the current altitude
     
-    // Test the PID loop
     motorControl_setAltitudeSetpoint(0);
     motorControl_setYawSetpoint(0);
     altitudeSetpoint = 0;
@@ -249,9 +255,7 @@ int main(void) {
         if (slowTickFlag) {
             slowTickFlag = false;
 
-            #ifdef DEBUG
             serialUART_SendInformation(yawSetpoint, yaw_get(), altitudeSetpoint, altitude_get(), motorControl_getMainRotorDuty(), motorControl_getTailRotorDuty(), state);
-            #endif
         }
 
         // Display Altitude and yaw
@@ -284,7 +288,7 @@ int main(void) {
                 state = LANDING;
             }
 
-            // Change altitude setpoint
+            // Check altitude setpoint
             if (checkButton(UP) == PUSHED) {
                 altitudeSetpoint += 10;
                 motorControl_setAltitudeSetpoint(altitudeSetpoint);
