@@ -22,6 +22,7 @@ void serialUART_init();
 
 /**
  * @brief Send the serial infromation 
+ * @cite uartDemo.c from the lab 4 folder author: P.J. Bones UCECE
  * @param desiredYaw The desired yaw
  * @param currentYaw The current yaw
  * @param desiredAltitude The desired altitude

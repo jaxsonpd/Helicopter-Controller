@@ -235,7 +235,7 @@ int main(void) {
     initButtons ();
     initSwitch ();
     
-    initDisplay (); 
+    display_init ();
     yaw_init ();
     motorControl_init();
 
@@ -259,7 +259,7 @@ int main(void) {
         }
 
         // Display Altitude and yaw
-        displayYawAndAltitude(yaw_get(), altitude_get());
+        main_display(yaw_get(), altitude_get(), motorControl_getMainRotorDuty(), motorControl_getTailRotorDuty());
 
         // Update the PID controller
         motorControl_update(deltaT); // [ms]

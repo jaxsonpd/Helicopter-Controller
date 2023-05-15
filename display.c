@@ -43,7 +43,7 @@
  * @cite OLEDTest.c from the lab 3 folder author: P.J. Bones UCECE
  *
  */
-void initDisplay (void) {
+void display_init (void) {
     // Initalise the Orbit OLED display
     OLEDInitialise ();
 }
@@ -58,7 +58,7 @@ void initDisplay (void) {
  * @param motor2 The percentage of motor 2 
  * 
 */
-void mainDisplay (int32_t yaw, int32_t altitude, int8_t motor1, int8_t motor2) {
+void main_display (int32_t yaw, int32_t altitude, int8_t motor1, int8_t motor2) {
     char string1[17];
     char string2[17];
     char string3[17];
@@ -76,82 +76,3 @@ void mainDisplay (int32_t yaw, int32_t altitude, int8_t motor1, int8_t motor2) {
     usnprintf(string4, sizeof(string4), "MOTOR2:  %3d%%     ", motor2);
     OLEDStringDraw (string4, 0, 3);
 }
-
-/**
- * @brief Draws to the OLED Display the Yaw and Altitude
- * @cite OLEDTest.c from the lab 3 folder author: P.J. Bones UCECE
- *
- * @param yaw The yaw taken from yaw_get() in yaw.c
- * @param altitude The altitude taken from altitude_get() in altitude.c
-*/
-void displayYawAndAltitude (int32_t yaw, int32_t altitude) {
-    char string[17];
-    char string2[17];
-
-    int32_t degrees = yaw / 10;
-    // Find the decimal value an convert it to absolute value
-    int32_t decimalDegrees = (yaw < 0) ? yaw % 10 * -1 : yaw % 10;
-
-    OLEDStringDraw ("YAW:            ", 0, 0);
-    usnprintf (string, sizeof(string), "%4d.%1d         ", degrees, decimalDegrees);
-    OLEDStringDraw (string, 0, 1);
-    OLEDStringDraw ("Altitude:       ", 0, 2);
-    usnprintf (string2, sizeof(string2), "%3d%%           ", altitude);
-    OLEDStringDraw (string2, 0, 4);
-}
-
-/**
- * @brief Draws to the OLED Display the Yaw
- * @cite OLEDTest.c from the lab 3 folder author: P.J. Bones UCECE
- *
- * @param yaw The yaw taken from yaw_get() in yaw.c
-*/
-void displayYaw (uint32_t yaw) {
-    char string[17];
-
-    OLEDStringDraw ("YAW:            ", 0, 0);
-    usnprintf (string, sizeof(string), "%3d%%�          ", yaw);
-    OLEDStringDraw (string, 0, 1);
-}
-
-/**
- * @brief Draws to the OLED Display the percentage altitude
- * @cite OLEDTest.c from the lab 3 folder author: P.J. Bones UCECE
- *
- * @param percentage The percentage altitude taken from altitude_get() in altitude.c
-*/
-void displayPercentage (uint32_t percentage) {
-    char string[17];  // 16 characters across the display
-
-    OLEDStringDraw ("Percentage      ", 0, 0);
-    usnprintf (string, sizeof(string), "%3d%%           ", percentage);
-    OLEDStringDraw (string, 0, 1);
-}
-
-/**
- * @brief Draws to the OLED Display the mean ADC value
- * @cite OLEDTest.c from the lab 3 folder author: P.J. Bones UCECE
- *
- * @param meanADC The mean ADC value taken from altitude_getRaw() in altitude.c
-*/
-void displayADC (uint32_t meanADC) {
-    char string[17];
-
-    OLEDStringDraw ("Mean ADC        ", 0, 0);
-    usnprintf (string, sizeof(string), "%4d            ", meanADC);
-    OLEDStringDraw (string, 0, 1);
-
-}
-
-/**
- * @brief Draws the OLED Display blank
- *
- *
-*/
-void displayNothing (void) {
-    OLEDStringDraw ("                ", 0, 0);
-    OLEDStringDraw ("                ", 0, 1);
-    OLEDStringDraw ("                ", 0, 2);
-    OLEDStringDraw ("                ", 0, 3);
-}
-

@@ -19,7 +19,7 @@
  * @cite OLEDTest.c from the lab 3 folder author: P.J. Bones UCECE
  *
  */
-void initDisplay(void);
+void display_init(void);
 
 /**
  * @brief Draws to the OLED Display the Yaw and Altitude
@@ -30,49 +30,6 @@ void initDisplay(void);
  * @param motor1 The percentage of motor 1
  * @param motor2 The percentage of motor 2 
 */
-void mainDisplay (int32_t yaw, int32_t altitude, int8_t motor1, int8_t motor2, uint8_t mode);
-
-
-/**
- * @brief Draws to the OLED Display the Yaw and Altitude
- * @cite OLEDTest.c from the lab 3 folder author: P.J. Bones UCECE
- *
- * @param yaw The yaw taken from yaw_get() in yaw.c
- * @param altitude The altitude taken from altitude_get() in altitude.c
-*/
-void displayYawAndAltitude (uint32_t yaw, uint32_t altitude);
-
-
-/**
- * @brief Draws to the OLED Display the Yaw
- * @cite OLEDTest.c from the lab 3 folder author: P.J. Bones UCECE
- *
- * @param yaw The yaw taken from yaw_get() in yaw.c
-*/
-void displayYaw (uint32_t yaw);
-
-
-/**
- * @brief Draws to the OLED Display the percentage altitude
- * @cite OLEDTest.c from the lab 3 folder author: P.J. Bones UCECE
- *
- * @param percentage The percentage altitude taken from altitude_get() in altitude.c
-*/
-void displayPercentage (uint32_t percentage);
-
-
-/**
- * @brief Draws to the OLED Display the mean ADC value
- *
- * @param meanADC The mean ADC value taken from altitude_getRaw() in altitude.c
-*/
-void displayADC (uint32_t meanADC);
-
-
-/**
- * @brief Draws the OLED Display blank
- *
-*/
-void displayNothing (void);
+void main_display (int32_t yaw, int32_t altitude, int8_t motor1, int8_t motor2);
 
 #endif /* DISPLAY_H_ */
