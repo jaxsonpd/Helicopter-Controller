@@ -33,6 +33,8 @@
 
 // ========================= Global Variables =========================
 
+char modeName[] = ""
+
 // ========================= Function Definitions =========================
 /**
  * @brief Initialises the UART for sending and recieving data
@@ -87,6 +89,7 @@ static void serialUART_SendBuffer(char *charBuffer) {
  */
 void serialUART_SendInformation(int32_t desiredYaw, int32_t currentYaw, int32_t desiredAltitude, int32_t currentAltitude, int8_t motor1, int8_t motor2, uint8_t mode) {
     char string[200];
+    char modeString[8];
 
     // Convert yaw
     int32_t degrees = currentYaw / 10;
@@ -100,10 +103,26 @@ void serialUART_SendInformation(int32_t desiredYaw, int32_t currentYaw, int32_t 
     // Find the decimal value an convert it to absolute value
     int32_t desiredDecimalDegrees = (desiredYaw < 0) ? desiredYaw % 10 * -1 : desiredYaw % 10;
 
+    switch (mode) {
+        case 0:
+            modeString = "Landed";
+            break;
+        case 1:
+            modeString = "Taking off";
+            break;
+        case 2;
+            modeString = "Flying";
+            break;
+        case 3;
+            modeString = "Landing";
+            break;
+    }
+    s
     // Send the information
     usnprintf (string, sizeof(string), 
-       "Yaw: %4d.%1d [%4d.%1d], Alt: %3d%% [%3d%%], Main: %3d%%, Tail: %3d%%, Mode: %1d\n\r",
-       degrees, decimalDegrees, desiredDegrees, desiredDecimalDegrees, currentAltitude, desiredAltitude, motor1, motor2, mode);
+       "Yaw: %4d.%1d [%4d.%1d], Alt: %3d%% [%3d%%], Main: %3d%%, Tail: %3d%%, Mode: %s\n\r",
+       degrees, decimalDegrees, desiredDegrees, desiredDecimalDegrees, currentAltitude, desiredAltitude, motor1, motor2, modeString);
 
     serialUART_SendBuffer(string);
+
 }
