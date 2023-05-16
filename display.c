@@ -69,10 +69,10 @@ void main_display (int32_t yaw, int32_t altitude, int8_t motor1, int8_t motor2) 
 
     usnprintf(string1, sizeof(string1), "   YAW:  %4d.%1d   ", degrees, decimalDegrees);
     OLEDStringDraw (string1, 0, 0);
-    usnprintf(string2, sizeof(string2), "   ALT:  %3d%%     ", altitude);
+    usnprintf(string2, sizeof(string2), "   ALT:    %3d%%   ", altitude);
     OLEDStringDraw (string2, 0, 1);
-    usnprintf(string3, sizeof(string3), "MOTOR1:  %3d%%     ", motor1);
+    usnprintf(string3, sizeof(string3), "MOTOR1:    %3d%%   ", motor1);
     OLEDStringDraw (string3, 0, 2);
-    usnprintf(string4, sizeof(string4), "MOTOR2:  %3d%%     ", motor2);
+    usnprintf(string4, sizeof(string4), "MOTOR2:    %3d%%   ", motor2);
     OLEDStringDraw (string4, 0, 3);
 }

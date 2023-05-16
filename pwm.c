@@ -25,8 +25,8 @@
 
 // ===================================== Constants ====================================
 // PWM configuration
-#define PWM_RATE_MAIN_HZ 150
-#define PWM_RATE_TAIL_HZ 150
+#define PWM_RATE_MAIN_HZ 300
+#define PWM_RATE_TAIL_HZ 300
 
 #define PWM_DIVIDER_CODE SYSCTL_PWMDIV_4
 #define PWM_DIVIDER 4

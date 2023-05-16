@@ -39,7 +39,7 @@ bool switch_value[NUM_SWITCHES];
  * @brief Initialises the switchs
  * 
  */
-void initSwitch(void) {
+void switch_init(void) {
     SysCtlPeripheralEnable (SW1_PERIPH_GPIO);
     GPIOPinTypeGPIOInput (SW1_GPIO_BASE, SW1_GPIO_PIN);
     GPIOPadConfigSet (SW1_GPIO_BASE, SW1_GPIO_PIN, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPD);
@@ -55,7 +55,7 @@ void initSwitch(void) {
  * @brief Updates the switches (Debounce)
  * 
  */
-void updateSwitch(void) {
+void switch_update(void) {
 
     switch_value[SW1] = (GPIOPinRead (SW1_GPIO_BASE, SW1_GPIO_PIN) == SW1_GPIO_PIN);
 
@@ -77,7 +77,7 @@ void updateSwitch(void) {
  * @param switchName 
  * @return uint8_t 
  */
-uint8_t checkSwitch (uint8_t switchName) {
+uint8_t switch_check (uint8_t switchName) {
     if (switch_flag[switchName]) {
             switch_flag[switchName] = false;
             if (switch_state[switchName] == switch_normal[switchName]) {

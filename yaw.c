@@ -38,6 +38,11 @@
 #define YAW_ENC_CHB_PIN GPIO_PIN_1
 #define YAW_ENC_CHB_PORT GPIO_PORTB_BASE
 
+// Yaw reference signal (J4-04)
+#define YAW_REF_PERIPH_GPIO SYSCTL_PERIPH_GPIOC
+#define YAW_REF_GPIO_BASE GPIO_PORTC_BASE
+#define YAW_REF_GPIO_PIN GPIO_PIN_4
+
 #define NUM_SLOTS_PER_REVOLUTION 112 // Number of slots in the quadrature encoder
 #define DEGREES_SCALE 10 // Scale factor for returning degrees so not to use floats
 
@@ -110,7 +115,10 @@ void yaw_init(void) {
     // Enable the interrupts for the pins
     GPIOIntEnable(YAW_ENC_CHA_PORT | YAW_ENC_CHB_PORT, YAW_ENC_CHA_PIN | YAW_ENC_CHB_PIN);
 
-    
+    // Setup the yaw reference signal (active low)
+    SysCtlPeripheralEnable(YAW_REF_PERIPH_GPIO);
+    GPIOPinTypeGPIOInput(YAW_REF_GPIO_BASE, YAW_REF_GPIO_PIN);
+    GPIOPadConfigSet(YAW_REF_GPIO_BASE, YAW_REF_GPIO_PIN, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPD);
 
     // Set the prevous states of the channels
     channelA_prev = GPIOPinRead(YAW_ENC_CHA_PORT, YAW_ENC_CHA_PIN);
@@ -161,4 +169,13 @@ uint8_t yaw_getChannels(void) {
  */
 void yaw_reset(void) {
     encoderValue = 0;
+}
+
+/**
+ * @brief Return the yaw reference signal
+ * 
+ * @return uint8_t yaw reference signal (1 = high, 0 = low)
+ */
+uint8_t yaw_getRef(void) {
+    return GPIOPinRead(YAW_REF_GPIO_BASE, YAW_REF_GPIO_PIN);
 }

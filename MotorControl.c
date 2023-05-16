@@ -17,16 +17,17 @@
 
 // ===================================== Constants ====================================
 // Define controller gains
-#define MAIN_P_GAIN 40
-#define MAIN_I_GAIN 2
+#define MAIN_P_GAIN 50
+#define MAIN_I_GAIN 10
 #define MAIN_D_GAIN 0
 #define MAIN_CONSTANT 40
 
-#define TAIL_P_GAIN 50
+#define TAIL_P_GAIN 130
 #define TAIL_I_GAIN 3
 #define TAIL_D_GAIN 0
-#define TAIL_CONSTANT 35
+#define TAIL_CONSTANT 30
 
+// Max duty cycles for each motor
 #define MAX_MAIN_DUTY 80
 #define MAX_TAIL_DUTY 70
 
@@ -143,7 +144,7 @@ void motorControl_update(uint32_t deltaT) {
                     + ((MAIN_D_GAIN * altErrorDerivative) / 1000); 
 
     // Scale to allow for more fine tuning
-    mainRotorDuty = mainRotorDuty / 10 + (MAIN_CONSTANT);
+    mainRotorDuty = mainRotorDuty / 100 + (MAIN_CONSTANT);
 
     // Limit the duty cycle to 1-100%
     if (mainRotorDuty > MAX_MAIN_DUTY) {
@@ -165,6 +166,13 @@ void motorControl_update(uint32_t deltaT) {
     // Calculate errors
     yawError = yawSetpoint - yaw_get();
 
+    // Ensure that the error is within bounds
+    if (yawError >= 1800) {
+        yawError -= 3600;
+    } else if (yawError < -1800) {
+        yawError += 3600;
+    }
+
     yawErrorIntergrated += yawError * deltaT;
     yawErrorDerivative = (yawError - yawErrorPrevious) / deltaT;
 
@@ -173,7 +181,7 @@ void motorControl_update(uint32_t deltaT) {
                     + (((TAIL_D_GAIN * yawErrorDerivative) / 1000) / 10);
 
     // Scale to allow for more fine tuning
-    tailRotorDuty = tailRotorDuty / 10 + (TAIL_CONSTANT);
+    tailRotorDuty = tailRotorDuty / 100 + (TAIL_CONSTANT);
     
     // Limit the duty cycle to 1-100%
     if (tailRotorDuty > MAX_TAIL_DUTY) {

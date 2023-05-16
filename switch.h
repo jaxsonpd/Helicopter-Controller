@@ -22,13 +22,13 @@ enum switchStates {SWITCH_DOWN = 0, SWITCH_UP, SWITCH_NO_CHANGE};
  * @brief Initialises the switchs
  * 
  */
-void initSwitch(void);
+void switch_init(void);
 
 /**
  * @brief Updates the switches (Debounce)
  * 
  */
-void updateSwitches(void);
+void switch_update(void);
 
 /**
  * @brief Return the switch state
@@ -36,6 +36,6 @@ void updateSwitches(void);
  * @param switchName 
  * @return uint8_t 
  */
-uint8_t checkSwitch (uint8_t switchName);
+uint8_t switch_check (uint8_t switchName);
 
 #endif // SWITCH_T

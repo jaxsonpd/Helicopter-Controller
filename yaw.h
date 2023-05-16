@@ -52,4 +52,11 @@ uint8_t yaw_getChannels(void);
  */
 void yaw_reset(void);
 
+/**
+ * @brief Return the yaw reference signal
+ * 
+ * @return uint8_t yaw reference signal (1 = high, 0 = low)
+ */
+uint8_t yaw_getRef(void);
+
 #endif /* YAW_H */

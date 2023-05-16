@@ -45,7 +45,7 @@ static uint8_t bufferSize;                  // Size of the circular buffer
 
 static uint32_t g_ulSampCnt = 0;		    // Counter for the numbler of samples processed
 
-static uint32_t minAltitudeADC = 2250;      // 2V value in the adc used to have a movable c value;
+static int32_t minAltitudeADC = 2250;      // 2V value in the adc used to have a movable c value;
 static uint32_t ADCValue;                   // Raw adc value used to reset minAltitudeADC
 
 

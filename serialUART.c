@@ -11,7 +11,8 @@
 // ========================= Include files =========================
 #include <stdint.h>
 #include <stdbool.h>
-#include "stdio.h"
+#include <stdio.h>
+#include <string.h>
 
 #include "inc/hw_memmap.h"
 #include "driverlib/sysctl.h"
@@ -33,9 +34,9 @@
 
 // ========================= Global Variables =========================
 
-char modeName[] = ""
-
 // ========================= Function Definitions =========================
+int usnprintf(char *str, size_t size, const char *format, ...);
+
 /**
  * @brief Initialises the UART for sending and recieving data
  * @cite uartDemo.c from the lab 4 folder author: P.J. Bones UCECE
@@ -89,7 +90,7 @@ static void serialUART_SendBuffer(char *charBuffer) {
  */
 void serialUART_SendInformation(int32_t desiredYaw, int32_t currentYaw, int32_t desiredAltitude, int32_t currentAltitude, int8_t motor1, int8_t motor2, uint8_t mode) {
     char string[200];
-    char modeString[8];
+    char modeString[10] = "";
 
     // Convert yaw
     int32_t degrees = currentYaw / 10;
@@ -105,19 +106,19 @@ void serialUART_SendInformation(int32_t desiredYaw, int32_t currentYaw, int32_t 
 
     switch (mode) {
         case 0:
-            modeString = "Landed";
+            strcpy(modeString, "Landed");
             break;
         case 1:
-            modeString = "Taking off";
+            strcpy(modeString, "Taking off");
             break;
-        case 2;
-            modeString = "Flying";
+        case 2:
+            strcpy(modeString, "Flying");
             break;
-        case 3;
-            modeString = "Landing";
+        case 3:
+            strcpy(modeString, "Landing");
             break;
     }
-    s
+
     // Send the information
     usnprintf (string, sizeof(string), 
        "Yaw: %4d.%1d [%4d.%1d], Alt: %3d%% [%3d%%], Main: %3d%%, Tail: %3d%%, Mode: %s\n\r",
