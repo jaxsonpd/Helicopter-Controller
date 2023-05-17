@@ -166,9 +166,8 @@ void heli_takeoff(void) {
             takeOffState = TAKE_OFF_RISING;
         } else {
             // Rotate the helicopter to face the reference
-            heliInfo.yawSetpoint = (yaw_get() >= 0) ? yaw_get() + 100 : yaw_get() - 100;
+            heliInfo.yawSetpoint = yaw_get() + 150;
             heliInfo.yawSetpoint = (heliInfo.yawSetpoint > 1800) ? heliInfo.yawSetpoint - 3600 : heliInfo.yawSetpoint;
-            heliInfo.yawSetpoint = (heliInfo.yawSetpoint <= -1800) ? heliInfo.yawSetpoint + 3600 : heliInfo.yawSetpoint;
 
             motorControl_setYawSetpoint(heliInfo.yawSetpoint);
         }

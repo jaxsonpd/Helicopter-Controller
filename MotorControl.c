@@ -17,12 +17,12 @@
 
 // ===================================== Constants ====================================
 // Define controller gains
-#define MAIN_P_GAIN 50
+#define MAIN_P_GAIN 70
 #define MAIN_I_GAIN 10
 #define MAIN_D_GAIN 0
 #define MAIN_CONSTANT 40
 
-#define TAIL_P_GAIN 130
+#define TAIL_P_GAIN 135
 #define TAIL_I_GAIN 3
 #define TAIL_D_GAIN 0
 #define TAIL_CONSTANT 32
@@ -159,6 +159,10 @@ void motorControl_update(uint32_t deltaT) {
     altErrorIntergrated += altError * deltaT;
     altErrorDerivative = (altError - altErrorPrevious) / deltaT;
 
+    if (altError > -1 && altError < 1) {
+        altErrorIntergrated = 0;
+    }
+    
     // Convert to Duty cycle (Divide by 1000 for ms -> s)
     mainRotorDuty = (MAIN_P_GAIN * altError) 
                     + ((MAIN_I_GAIN * altErrorIntergrated) / S_TO_MS)
@@ -195,6 +199,9 @@ void motorControl_update(uint32_t deltaT) {
     }
 
     yawErrorIntergrated += yawError * deltaT;
+    if (yawError > -8 && yawError < 8) {
+        yawErrorIntergrated = 0;
+    }
     yawErrorDerivative = (yawError - yawErrorPrevious) / deltaT;
 
     // Convert to duty cycle (Divide by 1000 for ms -> s and by 10 for degrees * 10 -> degrees)
