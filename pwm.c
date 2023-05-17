@@ -25,8 +25,8 @@
 
 // ===================================== Constants ====================================
 // PWM configuration
-#define PWM_RATE_MAIN_HZ 300
-#define PWM_RATE_TAIL_HZ 300
+#define PWM_RATE_MAIN_HZ 300 // 150-300 Hz
+#define PWM_RATE_TAIL_HZ 300 // 150-300 Hz
 
 #define PWM_DIVIDER_CODE SYSCTL_PWMDIV_4
 #define PWM_DIVIDER 4
@@ -56,19 +56,25 @@
 #define PWM_TAIL_GPIO_PIN    GPIO_PIN_1
 
 enum PWM_MOTOR {MAIN_MOTOR, TAIL_MOTOR};
-
 // ===================================== Globals ======================================
-bool masterEnable = false; // Master enable for the PWM moduals
+static bool mainMasterEnable = false; // Master enable for the PWM moduals
+static bool tailMasterEnable = false; // Master enable for the PWM moduals
 
 // ===================================== Function Definitions =========================
 /**
  * @brief set the PWM parameters
- * @param duty the duty cycle of the PWM (0 = off, 101 = enabled)
+ * @param duty the duty cycle of the PWM (0 = off)
  * @param motor the motor to set the PWM on
  *
  */
 void PWM_set (uint8_t duty, uint8_t motor) {
     if (motor == MAIN_MOTOR) {
+        if (duty == 0) {
+            PWM_disable(MAIN_MOTOR);
+        } else if (mainMasterEnable) {
+            PWM_enable(MAIN_MOTOR);
+        }
+
         // Calculate the PWM period corresponding to the freq.
         uint32_t ui32Period = SysCtlClockGet() / PWM_DIVIDER / PWM_RATE_MAIN_HZ;
 
@@ -78,6 +84,12 @@ void PWM_set (uint8_t duty, uint8_t motor) {
     }
 
     if (motor == TAIL_MOTOR) {
+        if (duty == 0) {
+            PWM_disable(TAIL_MOTOR);
+        } else if (tailMasterEnable){
+            PWM_enable(TAIL_MOTOR);
+        }
+
         // Calculate the PWM period corresponding to the freq.
         uint32_t ui32Period =
             SysCtlClockGet() / PWM_DIVIDER / PWM_RATE_TAIL_HZ;
@@ -96,8 +108,10 @@ void PWM_set (uint8_t duty, uint8_t motor) {
 void PWM_disable(uint8_t motor) {
     if (motor == MAIN_MOTOR) {
         PWMOutputState(PWM_MAIN_BASE, PWM_MAIN_OUTBIT, false);
+        mainMasterEnable = false;
     } else if (motor == TAIL_MOTOR) {
         PWMOutputState(PWM_TAIL_BASE, PWM_TAIL_OUTBIT, false);
+        tailMasterEnable = false;   
     }
 }
 
@@ -109,8 +123,10 @@ void PWM_disable(uint8_t motor) {
 void PWM_enable(uint8_t motor) {
     if (motor == MAIN_MOTOR) {
         PWMOutputState(PWM_MAIN_BASE, PWM_MAIN_OUTBIT, true);
+        mainMasterEnable = true;
     } else if (motor == TAIL_MOTOR) {
         PWMOutputState(PWM_TAIL_BASE, PWM_TAIL_OUTBIT, true);
+        tailMasterEnable = true;
     }
 }
 
@@ -122,6 +138,7 @@ void PWM_init(void) {
     // Set the PWM clock rate (using the prescaler)
     SysCtlPWMClockSet(PWM_DIVIDER_CODE);
 
+    // --------------------------------------------------------------------------
     // Main rotor PWM setup
     SysCtlPeripheralEnable(PWM_MAIN_PERIPH_PWM);
     SysCtlPeripheralEnable(PWM_MAIN_PERIPH_GPIO);
@@ -141,6 +158,7 @@ void PWM_init(void) {
     // Disable the output
     PWMOutputState(PWM_MAIN_BASE, PWM_MAIN_OUTBIT, false);
 
+    // --------------------------------------------------------------------------
     // Tail rotor PWM setup
     SysCtlPeripheralEnable(PWM_TAIL_PERIPH_PWM);
     SysCtlPeripheralEnable(PWM_TAIL_PERIPH_GPIO);

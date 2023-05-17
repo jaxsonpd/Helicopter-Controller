@@ -8,7 +8,6 @@
  * It takes inspiration from the lab 4 code produced by P.J. Bones	UCECE
 */
 
-
 // ========================= Include files =========================
 #include <stdint.h>
 #include <stdbool.h>
@@ -27,7 +26,9 @@
 #include "driverlib/interrupt.h"
 #include "driverlib/debug.h"
 #include "driverlib/pin_map.h"
+
 #include "OrbitOLED/OrbitOLEDInterface.h"
+
 
 #include "utils/ustdlib.h"
 
@@ -40,25 +41,22 @@
 #include "yaw.h"
 #include "MotorControl.h"
 #include "switch.h"
-
+#include "deviceInfo.h"
 
 // ========================= Constants and types =========================
+// Soft reset pin (J1-09)
+#define SOFT_RESET_PERIPH SYSCTL_PERIPH_GPIOA
+#define SOFT_RESET_PORT GPIO_PORTA_BASE
+#define SOFT_RESET_PIN GPIO_PIN_6
+
 #define SYSTICK_RATE_HZ 64 // 2 * CIRC_BUFFER_SIZE * Altitued Rate (4 Hz)
 #define SLOWTICK_RATE_HZ 8  // Max rate = SYSTICK_RATE_HZ 
 
 #define CIRC_BUFFER_SIZE 8 // size of the circular buffer used to store the altitued samples
 
-#define DEBUG // Sends information over serial UART
-
-// Yaw reference signal
-#define YAW_REF_PERIPH_GPIO SYSCTL_PERIPH_GPIOC
-#define YAW_REF_GPIO_BASE GPIO_PORTC_BASE
-#define YAW_REF_GPIO_PIN GPIO_PIN_4
-
-
-enum MAIN_STATE {LANDED, TAKING_OFF, FLYING, LANDING, };
 enum TAKE_OFF_STATE {TAKEOFF_START, TAKE_OFF_ROTATE, TAKE_OFF_RISING, TAKE_OFF_DONE};
 enum LANDING_STATE {LANDING_START, LANDING_ROTATE, LANDING_DESCENDING, LANDING_DONE};
+
 
 // ========================= Global Variables =========================
 bool slowTickFlag = false;
@@ -69,6 +67,8 @@ uint8_t altitudeSetpoint = 0;
 int16_t yawSetpoint = 0;
 
 uint8_t state = 0; // the current state of the helicopter
+
+deviceInfo_t heliInfo = {0}; // the current helicopter information
 
 // ========================= Function Definitions =========================
 /**
@@ -82,6 +82,8 @@ void SysTickInterupt_Handler(void) {
     // Increment the tick count
     tickInteruptCount++;
 
+    
+    
     // Check if the slow tick period has elapsed
     if (tickInteruptCount >= slowTick_period) {
         // Reset the tick count
@@ -95,6 +97,9 @@ void SysTickInterupt_Handler(void) {
 
     // Initiate the next ADC conversion
     altitude_read(); // technically this should not be called in interupt handler but it is done in labs 3 and 4
+
+    switch_update();
+    updateButtons();
 }
 
 
@@ -120,17 +125,14 @@ void clock_init(void) {
 
 
 /**
- * @brief initialise the other IO elements
+ * @brief initialise the soft reset pin
  * 
  */
-void setup(void) {
-    // Setup the yaw reference signal (active low)
-    SysCtlPeripheralEnable(YAW_REF_PERIPH_GPIO);
-    GPIOPinTypeGPIOInput(YAW_REF_GPIO_BASE, YAW_REF_GPIO_PIN);
-    GPIOPadConfigSet(YAW_REF_GPIO_BASE, YAW_REF_GPIO_PIN, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPD);
-
+void softReset_init(void) {
     // Setup reset pin (active low)
-
+    SysCtlPeripheralEnable(SOFT_RESET_PERIPH);
+    GPIOPinTypeGPIOInput(SOFT_RESET_PORT, SOFT_RESET_PIN);
+    GPIOPadConfigSet(SOFT_RESET_PORT, SOFT_RESET_PIN, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
 }
 
 
@@ -143,13 +145,14 @@ void heli_takeoff(void) {
 
     switch (takeOffState) {
     case TAKEOFF_START:
-        motorControl_enable(MAIN_MOTOR);
-        motorControl_enable(TAIL_MOTOR);
+        heliInfo.altitudeSetpoint = 0;
+        heliInfo.yawSetpoint = 0;
 
-        motorControl_setAltitudeSetpoint(0);
-        motorControl_setYawSetpoint(0);
-        altitudeSetpoint = 0;
-        yawSetpoint = 0;
+        motorControl_setAltitudeSetpoint(heliInfo.altitudeSetpoint);
+        motorControl_setYawSetpoint(heliInfo.yaw);
+
+        motorControl_enable(TAIL_MOTOR);
+        motorControl_enable(MAIN_MOTOR);
 
         takeOffState = TAKE_OFF_ROTATE;
         break;
@@ -157,32 +160,27 @@ void heli_takeoff(void) {
     case TAKE_OFF_ROTATE:
         if (yaw_getRef() == 0) {
             yaw_reset();
-            motorControl_setYawSetpoint(0);
-            yawSetpoint = 0;
+            heliInfo.yawSetpoint = 0;
+            motorControl_setYawSetpoint(heliInfo.yawSetpoint);
 
             takeOffState = TAKE_OFF_RISING;
         } else {
-            yawSetpoint = (yaw_get() > 0) ? yaw_get() + 50 : yaw_get() - 50;
-            yawSetpoint = (yawSetpoint > 1800) ? yawSetpoint - 3600 : yawSetpoint;
-            yawSetpoint = (yawSetpoint <= -1800) ? yawSetpoint + 3600 : yawSetpoint;
+            // Rotate the helicopter to face the reference
+            heliInfo.yawSetpoint = (yaw_get() >= 0) ? yaw_get() + 100 : yaw_get() - 100;
+            heliInfo.yawSetpoint = (heliInfo.yawSetpoint > 1800) ? heliInfo.yawSetpoint - 3600 : heliInfo.yawSetpoint;
+            heliInfo.yawSetpoint = (heliInfo.yawSetpoint <= -1800) ? heliInfo.yawSetpoint + 3600 : heliInfo.yawSetpoint;
 
-            motorControl_setYawSetpoint(yawSetpoint);
+            motorControl_setYawSetpoint(heliInfo.yawSetpoint);
         }
         break;
     
     case TAKE_OFF_RISING:
-        if (altitude_get() >= 0) {
-            takeOffState = TAKE_OFF_DONE;
-        }
-
-        motorControl_setYawSetpoint(0);
-        motorControl_setAltitudeSetpoint(0);
-        altitudeSetpoint = 0;
+        takeOffState = TAKE_OFF_DONE;
         break;
     
     case TAKE_OFF_DONE:
         takeOffState = TAKEOFF_START;
-        state = FLYING;
+        heliInfo.mode = FLYING;
         break;
     }
 }
@@ -202,13 +200,12 @@ void heli_land(void) {
             landingState = LANDING_ROTATE;
         }
 
-        altitudeSetpoint = (altitude_get() - 5);
-        motorControl_setAltitudeSetpoint(altitudeSetpoint);
-        
+        heliInfo.altitudeSetpoint = (altitude_get() - 5);
+        motorControl_setAltitudeSetpoint(heliInfo.altitudeSetpoint);
         break;
 
     case LANDING_ROTATE:
-        if (yaw_get() <= 8 && yaw_get() >= -8) {
+        if (yaw_get() <= 16 && yaw_get() >= -16) {
             referenceTimer += 1;
             if (referenceTimer > 10) {
                 referenceTimer = 0;
@@ -218,10 +215,10 @@ void heli_land(void) {
             referenceTimer = 0;	
         }
 
-        motorControl_setAltitudeSetpoint(10);
-        motorControl_setYawSetpoint(0);
-        altitudeSetpoint = 10;
-        yawSetpoint = 0;
+        heliInfo.yawSetpoint = 0;
+        heliInfo.altitudeSetpoint = 10;
+        motorControl_setAltitudeSetpoint(heliInfo.altitudeSetpoint);
+        motorControl_setYawSetpoint(heliInfo.yawSetpoint);
         break;
 
     case LANDING_DESCENDING:
@@ -229,8 +226,8 @@ void heli_land(void) {
             landingState = LANDING_DONE;
         }
 
-        motorControl_setAltitudeSetpoint(0);
-        altitudeSetpoint = 0;
+        heliInfo.altitudeSetpoint = 0;
+        motorControl_setAltitudeSetpoint(heliInfo.altitudeSetpoint);
         break;
 
     case LANDING_DONE:
@@ -238,13 +235,43 @@ void heli_land(void) {
         motorControl_disable(TAIL_MOTOR);
 
         landingState = LANDING_START;
-        state = LANDED;
+        heliInfo.mode = LANDED;
         break;
     }
 }
 
 
+/**
+ * @brief Update the helicopter setpoints while flying
+ * 
+ */
+void updateSetpoints(void) {
+    // Check altitude setpoint
+    if (checkButton(UP) == PUSHED) {
+        heliInfo.altitudeSetpoint += 10;
+        heliInfo.altitudeSetpoint = (heliInfo.altitudeSetpoint > 100) ? 100 : heliInfo.altitudeSetpoint;
 
+        motorControl_setAltitudeSetpoint(heliInfo.altitudeSetpoint);
+    } else if (checkButton(DOWN) == PUSHED) {
+        heliInfo.altitudeSetpoint -= 10;
+        heliInfo.altitudeSetpoint = (heliInfo.altitudeSetpoint < 10) ? 10 : heliInfo.altitudeSetpoint;
+        
+        motorControl_setAltitudeSetpoint(heliInfo.altitudeSetpoint);
+    }
+    
+    // Check yaw
+    if (checkButton(LEFT) == PUSHED) {
+        heliInfo.yawSetpoint -= 150;
+        heliInfo.yawSetpoint = (heliInfo.yawSetpoint <= -1800) ? heliInfo.yawSetpoint + 3600 : heliInfo.yawSetpoint;
+        motorControl_setYawSetpoint(heliInfo.yawSetpoint);
+    } else if (checkButton(RIGHT) == PUSHED) {
+        heliInfo.yawSetpoint += 150;
+        heliInfo.yawSetpoint = (heliInfo.yawSetpoint > 1800) ? heliInfo.yawSetpoint - 3600 : heliInfo.yawSetpoint;
+        motorControl_setYawSetpoint(heliInfo.yawSetpoint);
+    }
+}
+
+// ===================================== Main =====================================
 /**
  * @brief Main function for the helicopter control project
  * 
@@ -252,20 +279,21 @@ void heli_land(void) {
  */
 int main(void) {
     // ========================= Initialise =========================
+    initButtons();
+    switch_init();
     clock_init();
     serialUART_init();
     altitude_init(CIRC_BUFFER_SIZE);
-    initButtons();
-
-    switch_init();
     display_init ();
     yaw_init ();
     motorControl_init();
-    setup();
+    softReset_init();
 
     // Enable interrupts to the processor.
     IntMasterEnable();
     
+    SysCtlDelay(16000000); // Delay for 2s
+
     // Setup to start the program
     altitude_setMinimumAltitude(); // Set the minimum altitude to the current altitude
     
@@ -274,38 +302,50 @@ int main(void) {
     altitudeSetpoint = 0;
     yawSetpoint = 0;
 
+    // Clean switch
     switch_update();
     switch_update();
     switch_update();
     switch_check(SW1);
 
+    heliInfo.mode = 0;
+
     // ========================= Main Loop =========================
     while (true) {
+        // Update the helicopter device information
+        heliInfo.altitude = altitude_get();
+        heliInfo.yaw = yaw_get();
+        heliInfo.mainMotorDuty = motorControl_getMainRotorDuty();
+        heliInfo.tailMotorDuty = motorControl_getTailRotorDuty();
+        
         // Check if the slow tick flag is set
         if (slowTickFlag) {
             slowTickFlag = false;
 
-            serialUART_SendInformation(yawSetpoint, yaw_get(), altitudeSetpoint, altitude_get(), motorControl_getMainRotorDuty(), motorControl_getTailRotorDuty(), state);
+            serialUART_SendInformation(&heliInfo);
         }
 
+        // update ui
+        switch_update();
+        updateButtons(); 
+        
         // Display Altitude and yaw
-        main_display(yaw_get(), altitude_get(), motorControl_getMainRotorDuty(), motorControl_getTailRotorDuty());
+        main_display(&heliInfo);
+
+        // check for soft reset
+        if (GPIOPinRead(SOFT_RESET_PORT, SOFT_RESET_PIN) != SOFT_RESET_PIN) {
+            // SysCtlReset();
+        }
 
         // Update the PID controller
         motorControl_update(deltaT); // [ms]
         deltaT = 0;
 
-        // Update the button state
-        updateButtons();
-
-        // Update the switches
-        switch_update();
-
         // FSM
-        switch (state) {
+        switch (heliInfo.mode) {
         case LANDED:
             if (switch_check(SW1) == SWITCH_UP) {
-                state = TAKING_OFF;
+                heliInfo.mode = TAKING_OFF;
             }
             break;
         
@@ -315,30 +355,10 @@ int main(void) {
         
         case FLYING:
             if (switch_check(SW1) == SWITCH_DOWN) {
-                state = LANDING;
+                heliInfo.mode = LANDING;
             }
 
-            // Check altitude setpoint
-            if (checkButton(UP) == PUSHED) {
-                altitudeSetpoint += 10;
-                altitudeSetpoint = (altitudeSetpoint > 100) ? 100 : altitudeSetpoint;
-                motorControl_setAltitudeSetpoint(altitudeSetpoint);
-            } else if (checkButton(DOWN) == PUSHED) {
-                altitudeSetpoint -= 10;
-                altitudeSetpoint = (altitudeSetpoint < 10) ? 10 : altitudeSetpoint;
-                motorControl_setAltitudeSetpoint(altitudeSetpoint);
-            }
-            
-            // Check yaw
-            if (checkButton(LEFT) == PUSHED) {
-                yawSetpoint -= 150;
-                yawSetpoint = (yawSetpoint <= -1800) ? yawSetpoint + 3600 : yawSetpoint;
-                motorControl_setYawSetpoint(yawSetpoint);
-            } else if (checkButton(RIGHT) == PUSHED) {
-                yawSetpoint += 150;
-                yawSetpoint = (yawSetpoint > 1800) ? yawSetpoint - 3600 : yawSetpoint;
-                motorControl_setYawSetpoint(yawSetpoint);
-            }
+            updateSetpoints();
             break;
         
         case LANDING:

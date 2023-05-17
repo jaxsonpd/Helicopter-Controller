@@ -25,11 +25,29 @@
 #define TAIL_P_GAIN 130
 #define TAIL_I_GAIN 3
 #define TAIL_D_GAIN 0
-#define TAIL_CONSTANT 30
+#define TAIL_CONSTANT 32
 
 // Max duty cycles for each motor
 #define MAX_MAIN_DUTY 80
 #define MAX_TAIL_DUTY 70
+
+// Min duty cycles for each motor
+#define MIN_MAIN_DUTY 1
+#define MIN_TAIL_DUTY 1
+
+// Other constants
+#define MAX_YAW_ERROR 1800
+#define MIN_YAW_ERROR -1800
+
+#define YAW_ERROR_OFFSET 3600
+
+#define YAW_DEGREES_SCALE 10
+
+#define S_TO_MS 1000
+
+#define MAIN_MOTOR_SCALE 100
+#define TAIL_MOTOR_SCALE 100
+
 
 // ===================================== Globals ======================================
 static uint8_t altSetpoint = 0; // The setpoint for the main rotor
@@ -56,6 +74,7 @@ void motorControl_disable(uint8_t motor) {
     }
 }
 
+
 /**
  * @brief Enable the motors
  * @param motor the motor to Enable
@@ -70,24 +89,25 @@ void motorControl_enable(uint8_t motor) {
     }
 }
 
+
 /** 
  * @brief set the duty cycle of the main rotor
  * @param duty_cycle the duty cycle to set the main rotor 
  * 
- * @return uint8_t 0 if the duty cycle is out of range, 1 otherwise
+ * @return 1 if the duty cycle is out of range, 0 otherwise
  */
 static uint8_t motorControl_setMainRotorDuty(uint8_t duty_cycle) {
     // Check range
     if (duty_cycle > 100) {
-        return 0; // Out of range
+        return 1; // Out of range
     } else if (duty_cycle < 1) {
-        return 0; // Out of range
+        return 1; // Out of range
     }
 
     // Set the duty cycle
     mainRotorDuty = duty_cycle;
     PWM_set(duty_cycle, MAIN_MOTOR);
-    return 1;
+    return 0;
 }
 
 
@@ -95,20 +115,20 @@ static uint8_t motorControl_setMainRotorDuty(uint8_t duty_cycle) {
  * @brief set the duty cycle of the tail rotor
  * @param duty_cycle the duty cycle to set the tail rotor 
  * 
- * @return uint8_t 0 if the duty cycle is out of range, 1 otherwise
+ * @return 1 if the duty cycle is out of range, 0 otherwise
  */
 static uint8_t motorControl_setTailRotorDuty(uint8_t duty_cycle) {
     // Check range
     if (duty_cycle > 100) {
-        return 0; // Out of range
-    } else if (duty_cycle < 1) {
-        return 0; // Out of range
+        return 1; // Out of range
+    } else if (duty_cycle < 0) {
+        return 1; // Out of range
     }
 
     // Set the duty cycle
     tailRotorDuty = duty_cycle;
     PWM_set(duty_cycle, TAIL_MOTOR);
-    return 1;
+    return 0;
 }
 
 
@@ -140,17 +160,18 @@ void motorControl_update(uint32_t deltaT) {
     altErrorDerivative = (altError - altErrorPrevious) / deltaT;
 
     // Convert to Duty cycle (Divide by 1000 for ms -> s)
-    mainRotorDuty = (MAIN_P_GAIN * altError) + ((MAIN_I_GAIN * altErrorIntergrated) / 1000)
-                    + ((MAIN_D_GAIN * altErrorDerivative) / 1000); 
+    mainRotorDuty = (MAIN_P_GAIN * altError) 
+                    + ((MAIN_I_GAIN * altErrorIntergrated) / S_TO_MS)
+                    + ((MAIN_D_GAIN * altErrorDerivative) / S_TO_MS); 
 
     // Scale to allow for more fine tuning
-    mainRotorDuty = mainRotorDuty / 100 + (MAIN_CONSTANT);
+    mainRotorDuty = mainRotorDuty / MAIN_MOTOR_SCALE + (MAIN_CONSTANT);
 
     // Limit the duty cycle to 1-100%
     if (mainRotorDuty > MAX_MAIN_DUTY) {
         mainRotorDuty = MAX_MAIN_DUTY;
-    } else if (mainRotorDuty < 1) {
-        mainRotorDuty = 1;
+    } else if (mainRotorDuty < MIN_MAIN_DUTY) {
+        mainRotorDuty = MIN_MAIN_DUTY;
     }
 
     motorControl_setMainRotorDuty(mainRotorDuty);
@@ -167,27 +188,28 @@ void motorControl_update(uint32_t deltaT) {
     yawError = yawSetpoint - yaw_get();
 
     // Ensure that the error is within bounds
-    if (yawError >= 1800) {
-        yawError -= 3600;
-    } else if (yawError < -1800) {
-        yawError += 3600;
+    if (yawError >= MAX_YAW_ERROR) {
+        yawError -= YAW_ERROR_OFFSET;
+    } else if (yawError < MIN_YAW_ERROR) {
+        yawError += YAW_ERROR_OFFSET;
     }
 
     yawErrorIntergrated += yawError * deltaT;
     yawErrorDerivative = (yawError - yawErrorPrevious) / deltaT;
 
     // Convert to duty cycle (Divide by 1000 for ms -> s and by 10 for degrees * 10 -> degrees)
-    tailRotorDuty = ((TAIL_P_GAIN * yawError) / 10) + (((TAIL_I_GAIN * yawErrorIntergrated) / 1000) / 10) 
-                    + (((TAIL_D_GAIN * yawErrorDerivative) / 1000) / 10);
+    tailRotorDuty = ((TAIL_P_GAIN * yawError) / YAW_DEGREES_SCALE)
+                    + (((TAIL_I_GAIN * yawErrorIntergrated) / S_TO_MS) / YAW_DEGREES_SCALE) 
+                    + (((TAIL_D_GAIN * yawErrorDerivative) / S_TO_MS) / YAW_DEGREES_SCALE);
 
     // Scale to allow for more fine tuning
-    tailRotorDuty = tailRotorDuty / 100 + (TAIL_CONSTANT);
+    tailRotorDuty = tailRotorDuty / TAIL_MOTOR_SCALE + (TAIL_CONSTANT);
     
     // Limit the duty cycle to 1-100%
     if (tailRotorDuty > MAX_TAIL_DUTY) {
         tailRotorDuty = MAX_TAIL_DUTY;
-    } else if (tailRotorDuty < 1) {
-        tailRotorDuty = 1;
+    } else if (tailRotorDuty < MIN_TAIL_DUTY) {
+        tailRotorDuty = MIN_TAIL_DUTY;
     }
 
     motorControl_setTailRotorDuty(tailRotorDuty);

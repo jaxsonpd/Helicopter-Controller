@@ -6,8 +6,6 @@
  * @cite uartDemo.c from the lab 4 folder author: P.J. Bones UCECE
  */
 
-#define PART_TM4C1230C3PM // Target device
-
 // ========================= Include files =========================
 #include <stdint.h>
 #include <stdbool.h>
@@ -21,7 +19,11 @@
 #include "driverlib/pin_map.h"
 
 #include "serialUART.h"
+#include "deviceInfo.h"
+
 // ========================= Constants and types =========================
+#define PART_TM4C1230C3PM // Target device
+
 //---USB Serial comms: UART0, Rx:PA0 , Tx:PA1
 #define BAUD_RATE 9600
 #define UART_USB_BASE           UART0_BASE
@@ -35,14 +37,14 @@
 // ========================= Global Variables =========================
 
 // ========================= Function Definitions =========================
-int usnprintf(char *str, size_t size, const char *format, ...);
+int usnprintf(char *str, size_t size, const char *format, ...); 
 
 /**
  * @brief Initialises the UART for sending and recieving data
  * @cite uartDemo.c from the lab 4 folder author: P.J. Bones UCECE
  * 
  */
-void serialUART_init(uint32_t maxBufferSize) {
+void serialUART_init() {
     // Enable the peripherals used by this example.
     SysCtlPeripheralEnable(UART_USB_PERIPH_UART);
     SysCtlPeripheralEnable(UART_USB_PERIPH_GPIO);
@@ -51,7 +53,6 @@ void serialUART_init(uint32_t maxBufferSize) {
     GPIOPinTypeUART(UART_USB_GPIO_BASE, UART_USB_GPIO_PINS);
     GPIOPinConfigure(GPIO_PA0_U0RX);
     GPIOPinConfigure(GPIO_PA1_U0TX);
-
 
     // Configure the UART for 115,200, 8-N-1 operation.
     UARTConfigSetExpClk(UART_USB_BASE, SysCtlClockGet(), BAUD_RATE,
@@ -78,43 +79,36 @@ static void serialUART_SendBuffer(char *charBuffer) {
 
 /**
  * @brief Send the serial infromation 
- * @cite uartDemo.c from the lab 4 folder author: P.J. Bones UCECE
- * @param desiredYaw The desired yaw
- * @param currentYaw The current yaw
- * @param desiredAltitude The desired altitude
- * @param currentAltitude The current altitude
- * @param motor1 The percentage of motor 1
- * @param motor2 The percentage of motor 2
- * @param mode The current mode
+ * @param deviceInfo The device information struct
  * 
  */
-void serialUART_SendInformation(int32_t desiredYaw, int32_t currentYaw, int32_t desiredAltitude, int32_t currentAltitude, int8_t motor1, int8_t motor2, uint8_t mode) {
+void serialUART_SendInformation(deviceInfo_t *deviceInfo) {
     char string[200];
     char modeString[10] = "";
 
     // Convert yaw
-    int32_t degrees = currentYaw / 10;
+    int32_t degrees = deviceInfo->yaw / 10;
 
     // Find the decimal value an convert it to absolute value
-    int32_t decimalDegrees = (currentYaw < 0) ? currentYaw % 10 * -1 : currentYaw % 10;
+    int32_t decimalDegrees = (deviceInfo->yaw < 0) ? deviceInfo->yaw % 10 * -1 : deviceInfo->yaw % 10;
 
     // Convert yaw
-    int32_t desiredDegrees = desiredYaw / 10;
+    int32_t desiredDegrees = deviceInfo->yawSetpoint / 10;
 
     // Find the decimal value an convert it to absolute value
-    int32_t desiredDecimalDegrees = (desiredYaw < 0) ? desiredYaw % 10 * -1 : desiredYaw % 10;
+    int32_t desiredDecimalDegrees = (deviceInfo->yawSetpoint < 0) ? deviceInfo->yawSetpoint % 10 * -1 : deviceInfo->yawSetpoint % 10;
 
-    switch (mode) {
-        case 0:
+    switch (deviceInfo->mode) {
+        case LANDED:
             strcpy(modeString, "Landed");
             break;
-        case 1:
+        case TAKING_OFF:
             strcpy(modeString, "Taking off");
             break;
-        case 2:
+        case FLYING:
             strcpy(modeString, "Flying");
             break;
-        case 3:
+        case LANDING:
             strcpy(modeString, "Landing");
             break;
     }
@@ -122,7 +116,8 @@ void serialUART_SendInformation(int32_t desiredYaw, int32_t currentYaw, int32_t 
     // Send the information
     usnprintf (string, sizeof(string), 
        "Yaw: %4d.%1d [%4d.%1d], Alt: %3d%% [%3d%%], Main: %3d%%, Tail: %3d%%, Mode: %s\n\r",
-       degrees, decimalDegrees, desiredDegrees, desiredDecimalDegrees, currentAltitude, desiredAltitude, motor1, motor2, modeString);
+       degrees, decimalDegrees, desiredDegrees, desiredDecimalDegrees, deviceInfo->altitude, 
+       deviceInfo->altitudeSetpoint, deviceInfo->mainMotorDuty, deviceInfo->tailMotorDuty, modeString);
 
     serialUART_SendBuffer(string);
 

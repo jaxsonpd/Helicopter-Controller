@@ -1,15 +1,14 @@
-/** 
- * @file switch.h
- * @brief Header file for switch.c
- * @author Jack Duignan (Jackpduignan@gmail.com)
- * @date 2023-05-11
+/**
+ * @file switch.c
+ * @author Daniel Hawes ()
+ * @brief switch handling for the helicopter project
+ * @date 2023-05-10
+ *
  */
 
 
 #ifndef SWITCH_T
 #define SWITCH_T
-
-
 // ===================================== Includes =====================================
 #include <stdint.h>
 
@@ -33,8 +32,8 @@ void switch_update(void);
 /**
  * @brief Return the switch state
  * 
- * @param switchName 
- * @return uint8_t 
+ * @param switchName the switch to get the state of
+ * @return the current switch state
  */
 uint8_t switch_check (uint8_t switchName);
 

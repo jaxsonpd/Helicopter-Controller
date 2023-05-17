@@ -132,23 +132,16 @@ void yaw_init(void) {
 /**
  * @brief get the current yaw of the helicopter
  * 
- * @return int32_t current yaw of the helicopter +- from the zero position degrees / 10
+ * @return current yaw of the helicopter +- from the zero position degrees / 10
  */
 int32_t yaw_get(void) {
-    // Convert from encoder value to degrees
-    // int32_t relativePos = (encoderValue * 360 * DEGREES_SCALE) / (NUM_SLOTS_PER_REVOLUTION * 4);
-    //    if (relativePos <= - 1800) {
-    //        relativePos += 3600;
-    //    } else if (relativePos > 1800) {
-    //        relativePos -= 3600;
-    //    }
     return (encoderValue * 360 * DEGREES_SCALE) / (NUM_SLOTS_PER_REVOLUTION * 4);
 }
 
 /**
  * @brief Return the encoder value
  * 
- * @return int32_t encoder value
+ * @return encoder value
 */
 int32_t yaw_getEncoderValue(void) {
     return encoderValue;
@@ -157,10 +150,11 @@ int32_t yaw_getEncoderValue(void) {
 /**
  * @brief get the current values of the quadrature encoder channels
  * 
- * @return uint8_t current values of the quadrature encoder channels (0000 BPrev APREV B A)
+ * @return current values of the quadrature encoder channels (0000 BPrev APREV B A)
  */
 uint8_t yaw_getChannels(void) {
-    return ((GPIOPinRead(YAW_ENC_CHA_PORT, YAW_ENC_CHA_PIN)) | (GPIOPinRead(YAW_ENC_CHB_PORT, YAW_ENC_CHB_PIN) << 1) | (channelA_prev << 2) | (channelB_prev << 3));
+    return ((GPIOPinRead(YAW_ENC_CHA_PORT, YAW_ENC_CHA_PIN)) | (GPIOPinRead(YAW_ENC_CHB_PORT, YAW_ENC_CHB_PIN) << 1) 
+            | (channelA_prev << 2) | (channelB_prev << 3));
 }
 
 /**
@@ -172,9 +166,9 @@ void yaw_reset(void) {
 }
 
 /**
- * @brief Return the yaw reference signal
+ * @brief Return the yaw reference signal for the yaw reset function on takeoff
  * 
- * @return uint8_t yaw reference signal (1 = high, 0 = low)
+ * @return yaw reference signal (1 = high, 0 = low)
  */
 uint8_t yaw_getRef(void) {
     return GPIOPinRead(YAW_REF_GPIO_BASE, YAW_REF_GPIO_PIN);

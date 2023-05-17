@@ -27,7 +27,7 @@ void PWM_init(void);
 
 /**
  * @brief set the PWM parameters
- * @param duty the duty cycle of the PWM
+ * @param duty the duty cycle of the PWM (0 = off)
  * @param motor the motor to set the PWM on
  *
  */

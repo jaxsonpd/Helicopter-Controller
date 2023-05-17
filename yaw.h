@@ -28,21 +28,21 @@ void yaw_init(void);
 /**
  * @brief get the current yaw of the helicopter
  * 
- * @return int32_t current yaw of the helicopter +- from the zero position in degrees / 10
+ * @return current yaw of the helicopter +- from the zero position in degrees / 10
  */
 int32_t yaw_get(void);
 
 /**
  * @brief Return the encoder value
  * 
- * @return int32_t encoder value
+ * @return encoder value
 */
 int32_t yaw_getEncoderValue(void);
 
 /**
  * @brief get the current values of the quadrature encoder channels
  * 
- * @return uint8_t current values of the quadrature encoder channels (0000 BPrev APREV B A)
+ * @return current values of the quadrature encoder channels (0000 BPrev APREV B A)
  */
 uint8_t yaw_getChannels(void);
 
@@ -53,9 +53,9 @@ uint8_t yaw_getChannels(void);
 void yaw_reset(void);
 
 /**
- * @brief Return the yaw reference signal
+ * @brief Return the yaw reference signal for the yaw reset function on takeoff
  * 
- * @return uint8_t yaw reference signal (1 = high, 0 = low)
+ * @return yaw reference signal (1 = high, 0 = low)
  */
 uint8_t yaw_getRef(void);
 

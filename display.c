@@ -24,14 +24,13 @@
 #include "driverlib/debug.h"
 #include "driverlib/pin_map.h"
 
+#include "utils/ustdlib.h"
+
 #include "OrbitOLED/OrbitOLEDInterface.h"
 
-#include "utils/ustdlib.h"
-#include "stdio.h"
-
-
+#include "deviceInfo.h"
+#include "display.h"
 // ========================= Constants and types =========================
-#define DEBUG
 
 
 // ========================= Global Variables =========================
@@ -40,7 +39,6 @@
 // ========================= Function Definition =========================
 /**
  * @brief Enables GPIO pins for OLEF Peripheral
- * @cite OLEDTest.c from the lab 3 folder author: P.J. Bones UCECE
  *
  */
 void display_init (void) {
@@ -48,31 +46,31 @@ void display_init (void) {
     OLEDInitialise ();
 }
 
+
 /**
- * @brief Draws to the OLED Display the Yaw and Altitude
+ * @brief Draws to the OLED Display the Yaw and Altitude and motor percentages
  * @cite OLEDTest.c from the lab 3 folder author: P.J. Bones UCECE
  *
- * @param yaw The yaw taken from yaw_get() in yaw.c
- * @param altitude The altitude taken from altitude_get() in altitude.c
- * @param motor1 The percentage of motor 1
- * @param motor2 The percentage of motor 2 
+ * @param deviceInfo The struct containing the device information
  * 
 */
-void main_display (int32_t yaw, int32_t altitude, int8_t motor1, int8_t motor2) {
+void main_display (deviceInfo_t *deviceInfo) {
     char string1[17];
     char string2[17];
     char string3[17];
     char string4[17];
 
-    int32_t degrees = yaw / 10;
-    int32_t decimalDegrees = (yaw < 0) ? yaw % 10 * -1 : yaw % 10;
+    // Convert yaw to degrees
+    int32_t degrees = deviceInfo->yaw / 10;
+    int32_t decimalDegrees = (deviceInfo->yaw < 0) ? deviceInfo->yaw % 10 * -1 : deviceInfo->yaw % 10; // Remove negitive sign on decimal portion
 
+    // Print to OLED
     usnprintf(string1, sizeof(string1), "   YAW:  %4d.%1d   ", degrees, decimalDegrees);
     OLEDStringDraw (string1, 0, 0);
-    usnprintf(string2, sizeof(string2), "   ALT:    %3d%%   ", altitude);
+    usnprintf(string2, sizeof(string2), "   ALT:    %3d%%   ", deviceInfo->altitude);
     OLEDStringDraw (string2, 0, 1);
-    usnprintf(string3, sizeof(string3), "MOTOR1:    %3d%%   ", motor1);
+    usnprintf(string3, sizeof(string3), "MOTOR1:    %3d%%   ", deviceInfo->mainMotorDuty);
     OLEDStringDraw (string3, 0, 2);
-    usnprintf(string4, sizeof(string4), "MOTOR2:    %3d%%   ", motor2);
+    usnprintf(string4, sizeof(string4), "MOTOR2:    %3d%%   ", deviceInfo->tailMotorDuty);
     OLEDStringDraw (string4, 0, 3);
 }

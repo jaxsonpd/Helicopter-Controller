@@ -12,6 +12,8 @@
 // ========================= Include files =========================
 #include <stdint.h>
 
+#include "deviceInfo.h"
+
 // ========================= Function Prototypes =========================
 
 /**
@@ -22,14 +24,12 @@
 void display_init(void);
 
 /**
- * @brief Draws to the OLED Display the Yaw and Altitude
+ * @brief Draws to the OLED Display the Yaw and Altitude and motor percentages
  * @cite OLEDTest.c from the lab 3 folder author: P.J. Bones UCECE
  *
- * @param yaw The yaw taken from yaw_get() in yaw.c
- * @param altitude The altitude taken from altitude_get() in altitude.c
- * @param motor1 The percentage of motor 1
- * @param motor2 The percentage of motor 2 
+ * @param deviceInfo The struct containing the device information
+ * 
 */
-void main_display (int32_t yaw, int32_t altitude, int8_t motor1, int8_t motor2);
+void main_display (deviceInfo_t *deviceInfo);
 
 #endif /* DISPLAY_H_ */

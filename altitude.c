@@ -26,7 +26,6 @@
 #include "driverlib/pin_map.h"
 
 #include "utils/ustdlib.h"
-#include "stdio.h"
 
 #include "circBufT.h"
 
@@ -36,7 +35,7 @@
 #define DEBUG_ADC_CHANNEL ADC_CTL_CH0 // Use analog input channel 0 for debugging
 #define ALTITUDE_ADC_CHANNEL ADC_CTL_CH9 // Use analog input channel 9 for actual altitude
 
-#define ALTITUDE_GRADIENT 124 // 12.4 adc counts per 1% change in altitude
+#define ONE_VOLT_ADC 1241 // number of adc counts for 1 volt
 
 
 // ========================= Global Variables =========================
@@ -45,7 +44,7 @@ static uint8_t bufferSize;                  // Size of the circular buffer
 
 static uint32_t g_ulSampCnt = 0;		    // Counter for the numbler of samples processed
 
-static int32_t minAltitudeADC = 2250;      // 2V value in the adc used to have a movable c value;
+static int32_t minAltitudeADC = 2250;       // 2V value in the adc used to have a movable c value;
 static uint32_t ADCValue;                   // Raw adc value used to reset minAltitudeADC
 
 
@@ -135,9 +134,8 @@ int32_t altitude_get(void) {
     int32_t average = (2* sum + bufferSize) / 2 / bufferSize;
     
 
-    // Convert to percentage percentage = -0.0854*adc + 192 ( c value will change with min adc value)
-    // multiply by 10 to get 1 decimal place precision back
-    return (minAltitudeADC - average) * 100 / 1241 ;
+    // Convert to percentage percentage 
+    return (minAltitudeADC - average) * 100 / ONE_VOLT_ADC ;
 }
 
 

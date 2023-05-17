@@ -12,6 +12,8 @@
 // ========================= Include files =========================
 #include <stdint.h>
 
+#include "deviceInfo.h"
+
 // ========================= Function Prototypes =========================
 /**
  * @brief Initializes the UART for sending and receiving data
@@ -22,16 +24,9 @@ void serialUART_init();
 
 /**
  * @brief Send the serial infromation 
- * @cite uartDemo.c from the lab 4 folder author: P.J. Bones UCECE
- * @param desiredYaw The desired yaw
- * @param currentYaw The current yaw
- * @param desiredAltitude The desired altitude
- * @param currentAltitude The current altitude
- * @param motor1 The percentage of motor 1
- * @param motor2 The percentage of motor 2
- * @param mode The current mode
+ * @param deviceInfo The device information struct
  * 
  */
-void serialUART_SendInformation(int32_t desiredYaw, int32_t currentYaw, int32_t desiredAltitude, int32_t currentAltitude, int8_t motor1, int8_t motor2, uint8_t mode);
+void serialUART_SendInformation(deviceInfo_t *deviceInfo);
 
 #endif /* SERIALUART_H */
