@@ -20,12 +20,12 @@
 #define MAIN_P_GAIN 70
 #define MAIN_I_GAIN 10
 #define MAIN_D_GAIN 0
-#define MAIN_CONSTANT 40
+#define MAIN_CONSTANT 51
 
-#define TAIL_P_GAIN 135
-#define TAIL_I_GAIN 3
+#define TAIL_P_GAIN 145
+#define TAIL_I_GAIN 4
 #define TAIL_D_GAIN 0
-#define TAIL_CONSTANT 32
+#define TAIL_CONSTANT 41
 
 // Max duty cycles for each motor
 #define MAX_MAIN_DUTY 80
@@ -199,7 +199,8 @@ void motorControl_update(uint32_t deltaT) {
     }
 
     yawErrorIntergrated += yawError * deltaT;
-    if (yawError > -8 && yawError < 8) {
+
+    if (yawError > 0 && yawErrorIntergrated < 0 || yawError < 0 && yawErrorIntergrated > 0) {
         yawErrorIntergrated = 0;
     }
     yawErrorDerivative = (yawError - yawErrorPrevious) / deltaT;

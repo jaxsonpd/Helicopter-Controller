@@ -204,7 +204,7 @@ void heli_land(void) {
         break;
 
     case LANDING_ROTATE:
-        if (yaw_get() <= 16 && yaw_get() >= -16) {
+        if (yaw_get() <= 24 && yaw_get() >= -24) {
             referenceTimer += 1;
             if (referenceTimer > 10) {
                 referenceTimer = 0;
