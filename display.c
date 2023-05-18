@@ -28,7 +28,7 @@
 
 #include "OrbitOLED/OrbitOLEDInterface.h"
 
-#include "deviceInfo.h"
+#include "main.h"
 #include "display.h"
 // ========================= Constants and types =========================
 
@@ -54,7 +54,7 @@ void display_init (void) {
  * @param deviceInfo The struct containing the device information
  * 
 */
-void main_display (deviceInfo_t *deviceInfo) {
+void main_display (heliInfo_t *deviceInfo) {
     char string1[17];
     char string2[17];
     char string3[17];

@@ -14,13 +14,13 @@
 #include "pwm.h"
 #include "altitude.h"
 #include "yaw.h"
+#include "main.h"
 
 // ===================================== Constants ====================================
 // Define controller gains
 #define MAIN_P_GAIN 70
 #define MAIN_I_GAIN 10
 #define MAIN_D_GAIN 0
-#define MAIN_CONSTANT 51
 
 #define TAIL_P_GAIN 145
 #define TAIL_I_GAIN 4
@@ -41,12 +41,12 @@
 
 #define YAW_ERROR_OFFSET 3600
 
-#define YAW_DEGREES_SCALE 10
-
 #define S_TO_MS 1000
 
 #define MAIN_MOTOR_SCALE 100
 #define TAIL_MOTOR_SCALE 100
+
+#define RAMP_TIMER 10
 
 
 // ===================================== Globals ======================================
@@ -55,6 +55,8 @@ static int16_t yawSetpoint = 0; // The setpoint for the tail rotor
 
 static uint8_t mainRotorDuty = 0;
 static uint8_t tailRotorDuty = 0;
+
+static uint8_t mainConstant = 0;
 
 static bool mainRotorEnabled = false;
 static bool tailRotorEnabled = false;
@@ -169,7 +171,7 @@ void motorControl_update(uint32_t deltaT) {
                     + ((MAIN_D_GAIN * altErrorDerivative) / S_TO_MS); 
 
     // Scale to allow for more fine tuning
-    mainRotorDuty = mainRotorDuty / MAIN_MOTOR_SCALE + (MAIN_CONSTANT);
+    mainRotorDuty = mainRotorDuty / MAIN_MOTOR_SCALE + (mainConstant);
 
     // Limit the duty cycle to 1-100%
     if (mainRotorDuty > MAX_MAIN_DUTY) {
@@ -281,4 +283,31 @@ void motorControl_init(void) {
 
     motorControl_setAltitudeSetpoint(0);
     motorControl_setYawSetpoint(0);
+}
+
+/**
+ * @brief Ramp up the main rotor to find the hover point
+ * 
+ * @return true if the main rotor is at the hover point
+ */
+bool motorControl_rampUpMainRotor(void) {
+    static uint8_t currentDuty = 0;
+    static uint8_t timer = 0;
+    
+    if (altitude_get() > 0) {
+        mainConstant = currentDuty;    
+        return true;
+    } else {
+        // Ramp up the duty cycle
+        if (timer == 0) {
+            currentDuty++;
+            motorControl_setMainRotorDuty(currentDuty);
+            timer = RAMP_TIMER;
+        } else {
+            timer--;
+        }
+    }
+
+    return false;
+
 }

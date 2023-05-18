@@ -1,17 +1,18 @@
 /** 
- * @file deviceInfo.h
- * @brief Struct to allow easier access to device information (Altitude etc.)
+ * @file main.h
+ * @brief general constants and user defined types
  * @author Jack Duignan (Jackpduignan@gmail.com)
  * @date 2023-05-17
  */
 
 
-#ifndef DEVICEINFO_H
-#define DEVICEINFO_H
+#ifndef MAIN_H
+#define MAIN_H
 
 
 // ===================================== Includes =====================================
 #include <stdint.h>
+#include <stdbool.h>
 
 // ===================================== Constants ====================================
 typedef struct {
@@ -22,8 +23,13 @@ typedef struct {
     int16_t yawSetpoint;
     uint8_t mainMotorDuty;
     uint8_t tailMotorDuty;
-} deviceInfo_t;
+    bool mainMotorRamped;
+} heliInfo_t;
 
+#define YAW_DEGREES_SCALE 10
 
+enum MOTOR {MAIN_MOTOR, TAIL_MOTOR};
 enum MAIN_STATE {LANDED, TAKING_OFF, FLYING, LANDING};
-#endif // DEVICEINFO_H
+
+
+#endif // MAIN_H

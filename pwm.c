@@ -22,6 +22,7 @@
 #include "stdio.h"
 
 #include "pwm.h"
+#inlcude "main.h"
 
 // ===================================== Constants ====================================
 // PWM configuration
@@ -55,7 +56,6 @@
 #define PWM_TAIL_GPIO_CONFIG GPIO_PF1_M1PWM5
 #define PWM_TAIL_GPIO_PIN    GPIO_PIN_1
 
-enum PWM_MOTOR {MAIN_MOTOR, TAIL_MOTOR};
 // ===================================== Globals ======================================
 static bool mainMasterEnable = false; // Master enable for the PWM moduals
 static bool tailMasterEnable = false; // Master enable for the PWM moduals

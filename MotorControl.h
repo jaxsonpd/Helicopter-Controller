@@ -12,9 +12,9 @@
 
 // ===================================== Includes =====================================
 #include <stdint.h>
+#include <stdbool.h>
 
 // ===================================== Constants ====================================
-enum MOTORCONTORL_MOTOR {MAIN_MOTOR, TAIL_MOTOR};
 
 // ===================================== Globals ======================================
 
@@ -80,5 +80,11 @@ uint8_t motorControl_getMainRotorDuty(void);
  */
 uint8_t motorControl_getTailRotorDuty(void);
 
+/**
+ * @brief Ramp up the main rotor to find the hover point
+ * 
+ * @return true if the main rotor is at the hover point
+ */
+bool motorControl_rampUpMainRotor(void);
 
 #endif // MOTORCONTROL_H 

@@ -12,7 +12,7 @@
 // ========================= Include files =========================
 #include <stdint.h>
 
-#include "deviceInfo.h"
+#include "main.h"
 
 // ========================= Function Prototypes =========================
 
@@ -30,6 +30,6 @@ void display_init(void);
  * @param deviceInfo The struct containing the device information
  * 
 */
-void main_display (deviceInfo_t *deviceInfo);
+void main_display (heliInfo_t *deviceInfo);
 
 #endif /* DISPLAY_H_ */

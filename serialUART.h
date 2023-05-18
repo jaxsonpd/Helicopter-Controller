@@ -12,7 +12,7 @@
 // ========================= Include files =========================
 #include <stdint.h>
 
-#include "deviceInfo.h"
+#include "main.h"
 
 // ========================= Function Prototypes =========================
 /**
@@ -27,6 +27,6 @@ void serialUART_init();
  * @param deviceInfo The device information struct
  * 
  */
-void serialUART_SendInformation(deviceInfo_t *deviceInfo);
+void serialUART_SendInformation(heliInfo_t *deviceInfo);
 
 #endif /* SERIALUART_H */

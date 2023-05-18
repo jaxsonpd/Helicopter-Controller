@@ -19,7 +19,7 @@
 #include "driverlib/pin_map.h"
 
 #include "serialUART.h"
-#include "deviceInfo.h"
+#include "main.h"
 
 // ========================= Constants and types =========================
 #define PART_TM4C1230C3PM // Target device
@@ -82,7 +82,7 @@ static void serialUART_SendBuffer(char *charBuffer) {
  * @param deviceInfo The device information struct
  * 
  */
-void serialUART_SendInformation(deviceInfo_t *deviceInfo) {
+void serialUART_SendInformation(heliInfo_t *deviceInfo) {
     char string[200];
     char modeString[10] = "";
 
