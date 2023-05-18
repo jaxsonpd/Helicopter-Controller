@@ -51,11 +51,11 @@
 #define CIRC_BUFFER_SIZE 8 // size of the circular buffer used to store the altitued samples
 
 // ========================= Global Variables =========================
-bool slowTickFlag = false;
+bool slowTickFlag = false; // Flag set by the systick interupt handler at a rate of SLOWTICK_RATE_HZ
 
 uint32_t deltaT = 0; // the time between each PID loop update [ms]
 
-heliInfo_t heliInfo = {0};
+heliInfo_t heliInfo = {0}; // The helicopter information struct
 
 // ========================= Function Definitions =========================
 /**
@@ -115,7 +115,7 @@ void clock_init(void) {
  * @return int 
  */
 int main(void) {
-    // ========================= Initialise =========================
+    // ========================= Initialise Moduals =========================
     initButtons();
     switch_init();
     clock_init();
@@ -132,7 +132,7 @@ int main(void) {
     SysCtlDelay(16000000); // Wait to let the helicopter settle
 
     // Setup to start the program
-    altitude_setMinimumAltitude(); // Set the minimum altitude to the current altitude
+    altitude_setMinimumAltitude(); // zero the altitude
 
     // Clean switch 
     switch_update();
@@ -158,13 +158,12 @@ int main(void) {
             main_display(&heliInfo);
         }
         
+        // Check for a soft reset
         reset_check();
 
         // Update the PID controller
-        if (heliInfo.mainMotorRamped) { // Only update the PID controller if the motor has been ramped up
-            motorControl_update(deltaT); // [ms]
-            deltaT = 0;
-        }
+        motorControl_update(deltaT); // [ms]
+        deltaT = 0;
 
         // FSM
         switch (heliInfo.mode) {

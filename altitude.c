@@ -153,6 +153,7 @@ uint32_t altitude_getRaw(void) {
         sum += readCircBuf(&g_inBuffer);
     }
 
+    // Remove rounding errors
     return (2* sum + bufferSize) / 2 / bufferSize;
 }
 

@@ -9,6 +9,10 @@
 // ===================================== Includes =====================================
 #include <stdint.h>
 
+#include "inc/hw_memmap.h"
+#include "inc/hw_types.h"
+#include "inc/hw_ints.h"
+
 #include "heliFunctions.h"
 #include "MotorControl.h"
 #include "altitude.h"
@@ -17,7 +21,7 @@
 #include "buttons4.h"
 
 // ===================================== Constants ====================================
-enum TAKE_OFF_STATE {TAKEOFF_START, TAKE_OFF_ROTATE, TAKE_OFF_RISING, TAKE_OFF_DONE};
+enum TAKE_OFF_STATE {TAKEOFF_START, TAKEOFF_RISING, TAKE_OFF_ROTATE, TAKE_OFF_DONE};
 enum LANDING_STATE {LANDING_START, LANDING_ROTATE, LANDING_DESCENDING, LANDING_DONE};
 
 #define ROTATE_SPEED 150
@@ -26,12 +30,15 @@ enum LANDING_STATE {LANDING_START, LANDING_ROTATE, LANDING_DESCENDING, LANDING_D
 
 #define MAX_ALTITUDE 100
 #define MIN_ALTITUDE 10
+#define MIN_LANDING_ALTITUDE 5
 
 #define MAX_YAW 1800
 #define MIN_YAW -1800
 #define ONE_REV 3600
-#define UPPER_YAW_BOUND 24
-#define LOWER_YAW_BOUND -24
+#define UPPER_YAW_BOUND 8
+#define LOWER_YAW_BOUND -8
+#define YAW_LANDING_TIMER_COUNT 10
+
 // ===================================== Globals ======================================
 
 
@@ -42,35 +49,39 @@ enum LANDING_STATE {LANDING_START, LANDING_ROTATE, LANDING_DESCENDING, LANDING_D
  * 
  */
 void heliFunctions_takeoff(heliInfo_t *heliInfo) {
-        static uint8_t takeOffState = 0;
+    static uint8_t takeOffState = 0;
 
     switch (takeOffState) {
     case TAKEOFF_START:
-
+        // Reset the setpoints and enable the motors
         heliInfo->altitudeSetpoint = 0;
         heliInfo->yawSetpoint = 0;
+
         motorControl_setAltitudeSetpoint(heliInfo->altitudeSetpoint);
-        motorControl_setYawSetpoint(heliInfo->yaw);
+        motorControl_setYawSetpoint(heliInfo->yawSetpoint);
 
         motorControl_enable(TAIL_MOTOR);
         motorControl_enable(MAIN_MOTOR);
 
-        heliInfo->mainMotorRamped = motorControl_rampUpMainRotor();
-        
+        takeOffState = TAKEOFF_RISING;
 
-        if (heliInfo->mainMotorRamped) {
+    case TAKEOFF_RISING:
+        // Ramp up the main rotor to hover speed
+        heliInfo->mainMotorRamped = motorControl_rampUpMainRotor();
+
+        if (heliInfo->mainMotorRamped) { 
             takeOffState = TAKE_OFF_ROTATE;
         }
         break;
 
     case TAKE_OFF_ROTATE:
-        if (yaw_getRef() == 0) {
+        // Find the reference for the yaw
+        if (yaw_getRef() == 0) { // At the reference
             yaw_reset();
             
+            heliInfo->yawRefFound = true;
             heliInfo->yawSetpoint = 0;
             motorControl_setYawSetpoint(heliInfo->yawSetpoint);
-
-            takeOffState = TAKE_OFF_RISING;
         } else {
             // Rotate the helicopter to face the reference
             heliInfo->yawSetpoint = yaw_get() + ROTATE_SPEED;
@@ -78,10 +89,10 @@ void heliFunctions_takeoff(heliInfo_t *heliInfo) {
 
             motorControl_setYawSetpoint(heliInfo->yawSetpoint);
         }
-        break;
-    
-    case TAKE_OFF_RISING:
-        takeOffState = TAKE_OFF_DONE;
+
+        if (heliInfo->yawRefFound) {
+            takeOffState = TAKE_OFF_DONE;
+        }
         break;
     
     case TAKE_OFF_DONE:
@@ -103,49 +114,58 @@ void heliFunctions_land(heliInfo_t *heliInfo) {
 
     switch (landingState) {
     case LANDING_START:
-        if (altitude_get() <= MIN_ALTITUDE) {
+        // Lower the helicopter to just above the ground
+        if (altitude_get() <= MIN_LANDING_ALTITUDE) {
             landingState = LANDING_ROTATE;
-        }
+        } else {
+            heliInfo->altitudeSetpoint = (altitude_get() - LANDING_SPEED); // Lower the altitude slowly
+            heliInfo->altitudeSetpoint = (heliInfo->altitudeSetpoint < MIN_LANDING_ALTITUDE) ? MIN_LANDING_ALTITUDE : heliInfo->altitudeSetpoint;
 
-        heliInfo->altitudeSetpoint = (altitude_get() - LANDING_SPEED);
-        motorControl_setAltitudeSetpoint(heliInfo->altitudeSetpoint);
+            motorControl_setAltitudeSetpoint(heliInfo->altitudeSetpoint);
+        }
         break;
 
     case LANDING_ROTATE:
+        // Rotate the helicopter to face the reference 
         if (yaw_get() <= UPPER_YAW_BOUND && yaw_get() >= LOWER_YAW_BOUND) {
             referenceTimer += 1;
-            if (referenceTimer > 10) {
+            if (referenceTimer > YAW_LANDING_TIMER_COUNT) { // Make sure the helicopter is actually at the reference
                 referenceTimer = 0;
                 landingState = LANDING_DESCENDING;
             }
         } else {
             referenceTimer = 0;	
-        }
+            heliInfo->yawSetpoint = 0;
+            heliInfo->altitudeSetpoint = MIN_LANDING_ALTITUDE;
 
-        heliInfo->yawSetpoint = 0;
-        heliInfo->altitudeSetpoint = MIN_ALTITUDE;
-        motorControl_setAltitudeSetpoint(heliInfo->altitudeSetpoint);
-        motorControl_setYawSetpoint(heliInfo->yawSetpoint);
+            motorControl_setAltitudeSetpoint(heliInfo->altitudeSetpoint);
+            motorControl_setYawSetpoint(heliInfo->yawSetpoint);
+        }
         break;
 
     case LANDING_DESCENDING:
+        // Lower the helicopter to the ground
         if (altitude_get() < 1) {
             landingState = LANDING_DONE;
+        } else {
+            heliInfo->altitudeSetpoint = 0;
+            heliInfo->yawSetpoint = 0;
+
+            motorControl_setAltitudeSetpoint(heliInfo->altitudeSetpoint);
+            motorControl_setYawSetpoint(heliInfo->yawSetpoint);
         }
 
-        heliInfo->altitudeSetpoint = 0;
-        motorControl_setAltitudeSetpoint(heliInfo->altitudeSetpoint);
         break;
 
     case LANDING_DONE:
         motorControl_disable(MAIN_MOTOR);
         motorControl_disable(TAIL_MOTOR);
 
-        landingState = LANDING_START;
-        
-        heliInfo->mainMotorRamped = false; // reset the motor ramped flag
-        
+        // Reset the FSMs
+        landingState = LANDING_START;        
         heliInfo->mode = LANDED;
+        heliInfo->mainMotorRamped = false;
+        heliInfo->yawRefFound = false;
 
         break;
     }
@@ -157,7 +177,7 @@ void heliFunctions_land(heliInfo_t *heliInfo) {
  * 
  */
 void heliFunctions_updateSetpoints(heliInfo_t *heliInfo) {
-        // Check altitude setpoint
+    // Check altitude setpoint and bound it if needed
     if (checkButton(UP) == PUSHED) {
         heliInfo->altitudeSetpoint += LIFT_SPEED;
         heliInfo->altitudeSetpoint = (heliInfo->altitudeSetpoint > MAX_ALTITUDE) ? MAX_ALTITUDE : heliInfo->altitudeSetpoint;
@@ -170,7 +190,7 @@ void heliFunctions_updateSetpoints(heliInfo_t *heliInfo) {
         motorControl_setAltitudeSetpoint(heliInfo->altitudeSetpoint);
     }
     
-    // Check yaw
+    // Check yaw and bound it if needed
     if (checkButton(LEFT) == PUSHED) {
         heliInfo->yawSetpoint -= ROTATE_SPEED;
         heliInfo->yawSetpoint = (heliInfo->yawSetpoint <= MIN_YAW) ? heliInfo->yawSetpoint + ONE_REV : heliInfo->yawSetpoint;

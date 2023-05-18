@@ -24,6 +24,7 @@ typedef struct {
     uint8_t mainMotorDuty;
     uint8_t tailMotorDuty;
     bool mainMotorRamped;
+    bool yawRefFound;
 } heliInfo_t;
 
 #define YAW_DEGREES_SCALE 10

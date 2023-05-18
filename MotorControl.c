@@ -19,10 +19,11 @@
 // ===================================== Constants ====================================
 // Define controller gains
 #define MAIN_P_GAIN 70
-#define MAIN_I_GAIN 10
+#define MAIN_I_GAIN 15
 #define MAIN_D_GAIN 0
+#define MAIN_CONSTANT_OFFSET -3 // The offset to add to the main rotor constant duty cycle
 
-#define TAIL_P_GAIN 145
+#define TAIL_P_GAIN 150
 #define TAIL_I_GAIN 4
 #define TAIL_D_GAIN 0
 #define TAIL_CONSTANT 41
@@ -39,8 +40,6 @@
 #define MAIN_MOTOR_SCALE 100
 #define TAIL_MOTOR_SCALE 100
 
-#define RAMP_TIMER 10 // The number of ticks to wait between ramps of the motor
-
 // Yaw error bounds
 #define MAX_YAW_ERROR 1800
 #define MIN_YAW_ERROR -1800
@@ -52,6 +51,11 @@
 // Absolute max and min duty cycles
 #define ABS_MAX_DUTY 100
 #define ABS_MIN_DUTY 1
+
+// Ramp up constants
+#define RAMP_UP_DUTY_START 30
+#define RAMP_STEP 1
+#define RAMP_TIMER 3000 // The number of ticks to wait between ramps of the motor
 
 // ===================================== Globals ======================================
 static uint8_t altSetpoint = 0; // The setpoint for the main rotor
@@ -65,6 +69,7 @@ static uint8_t mainConstant = 0;
 static bool mainRotorEnabled = false;
 static bool tailRotorEnabled = false;
 
+static bool mainRotorRamping = false;
 // ===================================== Function Definitions =========================
 /**
  * @brief Disable the motors
@@ -165,7 +170,7 @@ void motorControl_update(uint32_t deltaT) {
     altErrorDerivative = (altError - altErrorPrevious) / deltaT;
 
     // if the error has changed sign reset the intergral
-    if (altError > 0 && altErrorIntergrated < 0 || altError < 0 && altErrorIntergrated > 0) { 
+    if (altError > 0 && altErrorIntergrated < 0 || altError < 0 && altErrorIntergrated > 0 || mainRotorRamping) { 
         altErrorIntergrated = 0;
     }
     
@@ -184,7 +189,9 @@ void motorControl_update(uint32_t deltaT) {
         mainRotorDuty = MIN_MAIN_DUTY;
     }
 
-    motorControl_setMainRotorDuty(mainRotorDuty);
+    if (!mainRotorRamping) {
+        motorControl_setMainRotorDuty(mainRotorDuty);
+    }
 
     // Update the yaw controller
     static int32_t yawErrorIntergrated = 0;
@@ -296,17 +303,24 @@ void motorControl_init(void) {
  * @return true if the main rotor is at the hover point
  */
 bool motorControl_rampUpMainRotor(void) {
-    static uint8_t currentDuty = 0;
-    static uint8_t timer = 0;
+    static uint8_t currentDuty = RAMP_UP_DUTY_START;
+    static uint16_t timer = 0;
+
+    mainRotorRamping = true;
     
-    if (altitude_get() > 0) {
-        mainConstant = currentDuty;    
+    if (altitude_get() > 0) { // Hover point found
+        mainConstant = currentDuty + MAIN_CONSTANT_OFFSET;  // Allow for some error
+        mainRotorRamping = false; 
+        currentDuty = RAMP_UP_DUTY_START; 
+
         return true;
     } else {
         // Ramp up the duty cycle
         if (timer == 0) {
-            currentDuty++;
+            // Increment the duty cycle and reset the timer
+            currentDuty += RAMP_STEP; 
             motorControl_setMainRotorDuty(currentDuty);
+            
             timer = RAMP_TIMER;
         } else {
             timer--;
@@ -314,5 +328,4 @@ bool motorControl_rampUpMainRotor(void) {
     }
 
     return false;
-
 }

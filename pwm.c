@@ -22,7 +22,7 @@
 #include "stdio.h"
 
 #include "pwm.h"
-#inlcude "main.h"
+#include "main.h"
 
 // ===================================== Constants ====================================
 // PWM configuration
@@ -79,8 +79,7 @@ void PWM_set (uint8_t duty, uint8_t motor) {
         uint32_t ui32Period = SysCtlClockGet() / PWM_DIVIDER / PWM_RATE_MAIN_HZ;
 
         PWMGenPeriodSet(PWM_MAIN_BASE, PWM_MAIN_GEN, ui32Period);
-        PWMPulseWidthSet(PWM_MAIN_BASE, PWM_MAIN_OUTNUM,
-            ui32Period * duty / 100);
+        PWMPulseWidthSet(PWM_MAIN_BASE, PWM_MAIN_OUTNUM, ui32Period * duty / 100);
     }
 
     if (motor == TAIL_MOTOR) {
@@ -95,8 +94,7 @@ void PWM_set (uint8_t duty, uint8_t motor) {
             SysCtlClockGet() / PWM_DIVIDER / PWM_RATE_TAIL_HZ;
         
         PWMGenPeriodSet(PWM_TAIL_BASE, PWM_TAIL_GEN, ui32Period);
-        PWMPulseWidthSet(PWM_TAIL_BASE, PWM_TAIL_OUTNUM,
-            ui32Period * duty / 100);
+        PWMPulseWidthSet(PWM_TAIL_BASE, PWM_TAIL_OUTNUM, ui32Period * duty / 100);
     }
 }
 
