@@ -27,27 +27,31 @@
 #define TAIL_D_GAIN 0
 #define TAIL_CONSTANT 41
 
-// Max duty cycles for each motor
+// Max and min duty cycles for each motor
 #define MAX_MAIN_DUTY 80
 #define MAX_TAIL_DUTY 70
-
-// Min duty cycles for each motor
 #define MIN_MAIN_DUTY 1
 #define MIN_TAIL_DUTY 1
 
-// Other constants
-#define MAX_YAW_ERROR 1800
-#define MIN_YAW_ERROR -1800
-
-#define YAW_ERROR_OFFSET 3600
-
+// Scale factors
 #define S_TO_MS 1000
 
 #define MAIN_MOTOR_SCALE 100
 #define TAIL_MOTOR_SCALE 100
 
-#define RAMP_TIMER 10
+#define RAMP_TIMER 10 // The number of ticks to wait between ramps of the motor
 
+// Yaw error bounds
+#define MAX_YAW_ERROR 1800
+#define MIN_YAW_ERROR -1800
+#define YAW_ERROR_OFFSET 3600
+
+// Alititude error bounds
+#define MIN_ALTITUDE_ERROR 0
+
+// Absolute max and min duty cycles
+#define ABS_MAX_DUTY 100
+#define ABS_MIN_DUTY 1
 
 // ===================================== Globals ======================================
 static uint8_t altSetpoint = 0; // The setpoint for the main rotor
@@ -100,9 +104,9 @@ void motorControl_enable(uint8_t motor) {
  */
 static uint8_t motorControl_setMainRotorDuty(uint8_t duty_cycle) {
     // Check range
-    if (duty_cycle > 100) {
+    if (duty_cycle > ABS_MAX_DUTY) {
         return 1; // Out of range
-    } else if (duty_cycle < 1) {
+    } else if (duty_cycle < ABS_MIN_DUTY) {
         return 1; // Out of range
     }
 
@@ -121,9 +125,9 @@ static uint8_t motorControl_setMainRotorDuty(uint8_t duty_cycle) {
  */
 static uint8_t motorControl_setTailRotorDuty(uint8_t duty_cycle) {
     // Check range
-    if (duty_cycle > 100) {
+    if (duty_cycle > ABS_MAX_DUTY) {
         return 1; // Out of range
-    } else if (duty_cycle < 0) {
+    } else if (duty_cycle < ABS_MIN_DUTY) {
         return 1; // Out of range
     }
 
@@ -151,17 +155,17 @@ void motorControl_update(uint32_t deltaT) {
 
     // Clean up the altitude
     currentAltitude = altitude_get();
-    if (currentAltitude < 0) { 
-        currentAltitude = 0;
+    if (currentAltitude < MIN_ALTITUDE_ERROR) { 
+        currentAltitude = MIN_ALTITUDE_ERROR;
     }
     
     // Calculate errors
     altError = altSetpoint - currentAltitude;
-
     altErrorIntergrated += altError * deltaT;
     altErrorDerivative = (altError - altErrorPrevious) / deltaT;
 
-    if (altError > -1 && altError < 1) {
+    // if the error has changed sign reset the intergral
+    if (altError > 0 && altErrorIntergrated < 0 || altError < 0 && altErrorIntergrated > 0) { 
         altErrorIntergrated = 0;
     }
     
@@ -193,19 +197,20 @@ void motorControl_update(uint32_t deltaT) {
     // Calculate errors
     yawError = yawSetpoint - yaw_get();
 
-    // Ensure that the error is within bounds
+        // Ensure that the error is within bounds
     if (yawError >= MAX_YAW_ERROR) {
         yawError -= YAW_ERROR_OFFSET;
     } else if (yawError < MIN_YAW_ERROR) {
         yawError += YAW_ERROR_OFFSET;
     }
 
+    yawErrorDerivative = (yawError - yawErrorPrevious) / deltaT;
     yawErrorIntergrated += yawError * deltaT;
 
-    if (yawError > 0 && yawErrorIntergrated < 0 || yawError < 0 && yawErrorIntergrated > 0) {
+    // If the error has changed sign reset the intergral
+    if (yawError > 0 && yawErrorIntergrated < 0 || yawError < 0 && yawErrorIntergrated > 0) { 
         yawErrorIntergrated = 0;
     }
-    yawErrorDerivative = (yawError - yawErrorPrevious) / deltaT;
 
     // Convert to duty cycle (Divide by 1000 for ms -> s and by 10 for degrees * 10 -> degrees)
     tailRotorDuty = ((TAIL_P_GAIN * yawError) / YAW_DEGREES_SCALE)

@@ -20,6 +20,18 @@
 enum TAKE_OFF_STATE {TAKEOFF_START, TAKE_OFF_ROTATE, TAKE_OFF_RISING, TAKE_OFF_DONE};
 enum LANDING_STATE {LANDING_START, LANDING_ROTATE, LANDING_DESCENDING, LANDING_DONE};
 
+#define ROTATE_SPEED 150
+#define LIFT_SPEED 10
+#define LANDING_SPEED 5
+
+#define MAX_ALTITUDE 100
+#define MIN_ALTITUDE 10
+
+#define MAX_YAW 1800
+#define MIN_YAW -1800
+#define ONE_REV 3600
+#define UPPER_YAW_BOUND 24
+#define LOWER_YAW_BOUND -24
 // ===================================== Globals ======================================
 
 
@@ -54,14 +66,15 @@ void heliFunctions_takeoff(heliInfo_t *heliInfo) {
     case TAKE_OFF_ROTATE:
         if (yaw_getRef() == 0) {
             yaw_reset();
+            
             heliInfo->yawSetpoint = 0;
             motorControl_setYawSetpoint(heliInfo->yawSetpoint);
 
             takeOffState = TAKE_OFF_RISING;
         } else {
             // Rotate the helicopter to face the reference
-            heliInfo->yawSetpoint = yaw_get() + 150;
-            heliInfo->yawSetpoint = (heliInfo->yawSetpoint > 1800) ? heliInfo->yawSetpoint - 3600 : heliInfo->yawSetpoint;
+            heliInfo->yawSetpoint = yaw_get() + ROTATE_SPEED;
+            heliInfo->yawSetpoint = (heliInfo->yawSetpoint > MAX_YAW) ? heliInfo->yawSetpoint - ONE_REV : heliInfo->yawSetpoint;
 
             motorControl_setYawSetpoint(heliInfo->yawSetpoint);
         }
@@ -90,16 +103,16 @@ void heliFunctions_land(heliInfo_t *heliInfo) {
 
     switch (landingState) {
     case LANDING_START:
-        if (altitude_get() <= 10) {
+        if (altitude_get() <= MIN_ALTITUDE) {
             landingState = LANDING_ROTATE;
         }
 
-        heliInfo->altitudeSetpoint = (altitude_get() - 5);
+        heliInfo->altitudeSetpoint = (altitude_get() - LANDING_SPEED);
         motorControl_setAltitudeSetpoint(heliInfo->altitudeSetpoint);
         break;
 
     case LANDING_ROTATE:
-        if (yaw_get() <= 24 && yaw_get() >= -24) {
+        if (yaw_get() <= UPPER_YAW_BOUND && yaw_get() >= LOWER_YAW_BOUND) {
             referenceTimer += 1;
             if (referenceTimer > 10) {
                 referenceTimer = 0;
@@ -110,7 +123,7 @@ void heliFunctions_land(heliInfo_t *heliInfo) {
         }
 
         heliInfo->yawSetpoint = 0;
-        heliInfo->altitudeSetpoint = 10;
+        heliInfo->altitudeSetpoint = MIN_ALTITUDE;
         motorControl_setAltitudeSetpoint(heliInfo->altitudeSetpoint);
         motorControl_setYawSetpoint(heliInfo->yawSetpoint);
         break;
@@ -146,25 +159,27 @@ void heliFunctions_land(heliInfo_t *heliInfo) {
 void heliFunctions_updateSetpoints(heliInfo_t *heliInfo) {
         // Check altitude setpoint
     if (checkButton(UP) == PUSHED) {
-        heliInfo->altitudeSetpoint += 10;
-        heliInfo->altitudeSetpoint = (heliInfo->altitudeSetpoint > 100) ? 100 : heliInfo->altitudeSetpoint;
+        heliInfo->altitudeSetpoint += LIFT_SPEED;
+        heliInfo->altitudeSetpoint = (heliInfo->altitudeSetpoint > MAX_ALTITUDE) ? MAX_ALTITUDE : heliInfo->altitudeSetpoint;
 
         motorControl_setAltitudeSetpoint(heliInfo->altitudeSetpoint);
     } else if (checkButton(DOWN) == PUSHED) {
-        heliInfo->altitudeSetpoint -= 10;
-        heliInfo->altitudeSetpoint = (heliInfo->altitudeSetpoint < 10) ? 10 : heliInfo->altitudeSetpoint;
-        
-        
+        heliInfo->altitudeSetpoint -= LIFT_SPEED;
+        heliInfo->altitudeSetpoint = (heliInfo->altitudeSetpoint < MIN_ALTITUDE) ? MIN_ALTITUDE : heliInfo->altitudeSetpoint;
+
+        motorControl_setAltitudeSetpoint(heliInfo->altitudeSetpoint);
     }
     
     // Check yaw
     if (checkButton(LEFT) == PUSHED) {
-        heliInfo->yawSetpoint -= 150;
-        heliInfo->yawSetpoint = (heliInfo->yawSetpoint <= -1800) ? heliInfo->yawSetpoint + 3600 : heliInfo->yawSetpoint;
+        heliInfo->yawSetpoint -= ROTATE_SPEED;
+        heliInfo->yawSetpoint = (heliInfo->yawSetpoint <= MIN_YAW) ? heliInfo->yawSetpoint + ONE_REV : heliInfo->yawSetpoint;
+
         motorControl_setYawSetpoint(heliInfo->yawSetpoint);
     } else if (checkButton(RIGHT) == PUSHED) {
-        heliInfo->yawSetpoint += 150;
-        heliInfo->yawSetpoint = (heliInfo->yawSetpoint > 1800) ? heliInfo->yawSetpoint - 3600 : heliInfo->yawSetpoint;
+        heliInfo->yawSetpoint += ROTATE_SPEED;
+        heliInfo->yawSetpoint = (heliInfo->yawSetpoint > MAX_YAW) ? heliInfo->yawSetpoint - ONE_REV : heliInfo->yawSetpoint;
+
         motorControl_setYawSetpoint(heliInfo->yawSetpoint);
     }
 }
