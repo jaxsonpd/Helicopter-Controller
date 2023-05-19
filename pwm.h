@@ -1,7 +1,7 @@
 /**
  * @file pwm.h
  * @brief Header file for pwm.c
- * @author Jack Duignan (Jdu80@uclive.ac.nz)
+ * @author Jack Duignan (Jdu80@uclive.ac.nz), Daniel Hawes (dha144@uclive.ac.nz)
  * @date 2023-05-06
 */
 

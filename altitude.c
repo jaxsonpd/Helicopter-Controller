@@ -1,6 +1,6 @@
 /**
  * @file altitude.c
- * @author Jack Duignan (jdu80@uclive.ac.nz)
+ * @author Jack Duignan (jdu80@uclive.ac.nz), Daniel Hawes (dha144@uclive.ac.nz)
  * @brief read the altitude of the helicopter and store it in a circular buffer
  * @date 2023-03-12
  * 

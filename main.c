@@ -1,7 +1,7 @@
 /*
  * @file main.c
  * @brief Main file for the helicopter control project
- * @author Jack Duignan (jdu80@uclive.ac.nz), Daniel Hawes
+ * @author Jack Duignan (jdu80@uclive.ac.nz), Daniel Hawes (dha144@uclive.ac.nz)
  * @date 2023-03-12
  * 
  * This file contains the main function for the helicopter control project. 
@@ -28,7 +28,6 @@
 #include "driverlib/pin_map.h"
 
 #include "OrbitOLED/OrbitOLEDInterface.h"
-
 
 #include "utils/ustdlib.h"
 

@@ -1,7 +1,7 @@
 /** 
  * @file MotorControl.h
  * @brief Header file for MotorControl.c
- * @author Jack Duignan (Jackpduignan@gmail.com)
+ * @author Jack Duignan (jdu80@uclive.ac.nz), Daniel Hawes (dha144@uclive.ac.nz)
  * @date 2023-05-06
  */
 

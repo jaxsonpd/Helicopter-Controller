@@ -1,7 +1,7 @@
 /** 
  * @file reset.c
  * @brief Performs a software reset of the microcontroller	
- * @author Jack Duignan (Jackpduignan@gmail.com)
+ * @author Jack Duignan (jdu80@uclive.ac.nz)
  * @date 2023-05-18
  */
 
@@ -55,6 +55,6 @@ void reset_init(void) {
  */
 void reset_check(void) {
     if (GPIOPinRead(SOFT_RESET_PORT, SOFT_RESET_PIN) != SOFT_RESET_PIN) {
-        // SysCtlReset();
+        SysCtlReset();
     }
 }

@@ -1,7 +1,7 @@
 /** 
  * @file MotorControl.c
  * @brief Motor control module for the helicopter control project
- * @author Jack Duignan (Jackpduignan@gmail.com)
+ * @author Jack Duignan (jdu80@uclive.ac.nz), Daniel Hawes (dha144@uclive.ac.nz)
  * @date 2023-05-06
  */
 
@@ -70,6 +70,8 @@ static bool mainRotorEnabled = false;
 static bool tailRotorEnabled = false;
 
 static bool mainRotorRamping = false;
+
+
 // ===================================== Function Definitions =========================
 /**
  * @brief Disable the motors

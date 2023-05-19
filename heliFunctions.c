@@ -1,7 +1,7 @@
 /** 
  * @file heliFunctions.c
  * @brief Functions for the helicopter control project
- * @author Jack Duignan (Jackpduignan@gmail.com)
+ * @author Jack Duignan (jdu80@uclive.ac.nz), Daniel Hawes (dha144@uclive.ac.nz)
  * @date 2023-05-18
  */
 
@@ -170,6 +170,7 @@ void heliFunctions_land(heliInfo_t *heliInfo) {
         break;
     }
 }
+
 
 /**
  * @brief Update the helicopter setpoints while flying

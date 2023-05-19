@@ -1,7 +1,7 @@
 /** 
  * @file pwm.c
  * @brief PWM module for the helicopter control project
- * @author Jack Duignan (Jdu80@uclive.ac.nz)
+ * @author Jack Duignan (Jdu80@uclive.ac.nz), Daniel Hawes (dha144@uclive.ac.nz)
  * @cite Adapted from P.J. Bones UCECE
  * @date 2023-05-06
  */
